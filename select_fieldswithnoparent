@@ -1,0 +1,1 @@
+select id, field_name from fields where fields.id not in (select child from temp_field);

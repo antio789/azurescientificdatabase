@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/bootstrap.min.css">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/js/jquery-3.7.1.min.js"></script>
+    <script src="/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <figure class="col text-start" id="home">
+        <a href="/" title="BioResources &amp; Technology" role="link">
+            <img src="brt.png" title="BioResources &amp; Technology" role="banner" alt="BioResources &amp; Technology"
+                aria-label="BioResources &amp; Technology" class="img-fluid">
+        </a>
+    </figure>
+    <div class="head p-2">
+        <h1 class="large">Scientific Database</h1>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row align-items-start">
+            <div class="col">
+                <h2>search querries</h2>
+                <ul id="search-terms" class="list-group">
+                    <% for(const obj of fields){ %>
+                        <li class="list-group-item">
+                            <button name="entry-<%=obj.id%>" id="fieldId-<%= obj.id %>"
+                                class="selection-button "></button>
+                            <label for="fieldid-<%= obj.id %>">
+                                <%= obj.field_name %>
+                            </label>
+                        </li>
+                        <% } %>
+                </ul>
+            </div>
+            <div class="col-9 border border-dark-subtle rounded bg-dark-subtle" id="articles-section">
+
+                <h2>Articles</h2>
+                <div class="accordion" id="accordionfilter">
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+        <script src="/functions.js"></script>
+</body>
+
+</html>

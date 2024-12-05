@@ -1,0 +1,10 @@
+DROP VIEW "main"."fields_relations";
+CREATE VIEW "fields_relations" AS SELECT 
+    parent_tech.field_name AS parent_name,
+    child_tech.field_name AS child_name
+FROM 
+    fields_tree AS ft
+JOIN 
+    fields AS parent_tech ON ft.parent = parent_tech.id
+JOIN 
+    fields AS child_tech ON ft.child = child_tech.id

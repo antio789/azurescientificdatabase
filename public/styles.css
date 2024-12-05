@@ -1,0 +1,119 @@
+.selection-button {
+    min-width: 22px;
+    min-height: 22px;
+}
+
+.active {
+    background-color: green;
+}
+
+body {
+    background-color: #ddd;
+    font-family: Arial, sans-serif;
+}
+
+#fields {
+    margin: 20px;
+}
+
+.footer {
+    background: rgb(235, 100, 8);
+    color: #fff;
+    padding-bottom: 20px;
+    padding-top: 15px;
+    margin-top: 30px;
+}
+
+.footer a {
+    color: #fff;
+    text-decoration: none;
+    background-color: transparent;
+
+}
+
+.footer .webcore-widget h2 {
+    font-size: 1.46em;
+    border-bottom: 1px solid #fff;
+    padding-bottom: 10px;
+    font-family: "etelka_textbold", sans-serif;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
+
+.footer .webcore-widget h2 {
+    font-size: 1.46em;
+    border-bottom: 1px solid #fff;
+    padding-bottom: 10px;
+    font-family: "etelka_textbold", sans-serif;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+}
+
+
+.field {
+    margin-bottom: 15px;
+}
+
+.toggle-btn {
+    margin-right: 10px;
+}
+
+.articles-list {
+    margin-left: 20px;
+}
+
+.children {
+    margin-left: 20px;
+}
+
+.head {
+    text-align: center;
+}
+
+.nodecoration {
+    text-decoration: none;
+}
+
+.selection-button {
+    position: absolute;
+    /* Adjust if needed */
+}
+
+.list-group-item label {
+    padding-left: 25px;
+}
+
+#home {
+    position: absolute;
+    max-width: 5%;
+    max-height: 5%;
+}
+
+@media(min-width:1200px) {
+    .large {
+        font-size: 8rem;
+        line-height: 6rem;
+    }
+
+
+}
+
+@media(min-width:992px) {
+    .large {
+        font-size: 6rem;
+        line-height: 5rem;
+    }
+
+    #articles-section {
+        margin-right: 50px;
+        padding-bottom: 100px;
+    }
+
+
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/bootstrap.min.css">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/js/jquery-3.7.1.min.js"></script>
+    <script src="/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <figure class="col text-start" id="home">
+        <a href="/" title="BioResources &amp; Technology" role="link">
+            <img src="brt.png" title="BioResources &amp; Technology" role="banner" alt="BioResources &amp; Technology"
+                aria-label="BioResources &amp; Technology" class="img-fluid">
+        </a>
+    </figure>
+    <div class="head p-2">
+        <h1 class="large">Scientific Database</h1>
+    </div>
+
+    <form action="">
+        <h1>Submission form for new articles</h1>
+        <div class="mb-3">
+            <label for="exampleInputEmail1" class="form-label">Email address</label>
+            <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+            <div id="emailHelp" class="form-text">contact email</div>
+        </div>
+
+        <div class="input-group" id="authors">
+            <span class="input-group-text">Author first and last name</span>
+            <input type="text" aria-label="First name" class="form-control">
+            <input type="text" aria-label="Last name" class="form-control">
+        </div>
+
+        <ul id="search-terms" class="list-group">
+            <% for(const obj of fields){ %>
+                <li class="list-group-item">
+                    <button name="entry-<%=obj.id%>" id="fieldId-<%= obj.id %>" class="selection-button "></button>
+                    <label for="fieldid-<%= obj.id %>">
+                        <%= obj.field_name %>
+                    </label>
+                </li>
+                <% } %>
+        </ul>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+
+
+    </form>
+
+    <%- include('partials/footer') %>
+</body>
+
+</html>
