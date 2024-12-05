@@ -90,7 +90,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 
 app.use('/', indexRouter);
-app.use('/search', searchrouter);
+//app.use('/search', searchrouter);
+
+app.get('/search', async (req, res) => {
+  const param = await getMainFields();
+  res.render('search', { fields: param });
+});
+
 
 //called when a new filter is applied to update articles and filter context
 app.post('/search', async (req, res) => {
