@@ -176,6 +176,7 @@ yearSelection.addEventListener('click', function (e) {
 const yearFilterButton = document.querySelector("#yearFilterButton");
 yearFilterButton.addEventListener('click', function (e) {
     console.log("click");
+    const value = yearSelection.value;
     if (value === "From - To") {
         startyear = yearSelection.nextElementSibling;//first year to filter
         endyear = startyear.nextElementSibling;//last year to filter
