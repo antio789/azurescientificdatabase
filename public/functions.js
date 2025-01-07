@@ -37,9 +37,8 @@ function fetchArticles(id, target, activeIds) {
         .then(response => response.json())
         .then(data => {
             const response = JSON.parse(data);
-            console.log(response);
-            // Update the article list
-            const articlelist = document.querySelector("#articles");
+            //console.log(response);
+
             //addNewArticles(response.articles, articlelist);
             // Update child fields
             addNewFilters(response.children, target);
@@ -59,7 +58,6 @@ function refreshArticles(activeIds) {
         .then(response => response.json())
         .then(data => {
             const response = JSON.parse(data);
-            const articlelist = document.querySelector("#articles");
             //addNewArticles(response.articles, articlelist);
             addNewArticlesAccordion(response.articles, document.querySelector("#accordionfilter"));
         })
@@ -78,6 +76,7 @@ function addNewFilters(filters, target) {
         const lab = document.createElement('label');
         lab.for = `fieldId-${obj.id}`;
         lab.innerText = obj.field_name;
+        lab.classList.add("text-capitalize");
         li.append(button);
         li.append(lab);
         ul.append(li);
@@ -110,7 +109,6 @@ function addNewArticlesAccordion(filters, target) {
     div2.classList.add("accordion-item"); //<div class="accordion-item">
     for (const obj of filters) {
 
-
         const h2 = document.createElement("h2");
         h2.classList.add("accordion-header");   //<h2 class="accordion-header"></h2>
         const a = document.createElement("a");
@@ -125,7 +123,10 @@ function addNewArticlesAccordion(filters, target) {
         but.setAttribute('data-bs-target', `#articleId-${obj.id}`);
         but.setAttribute("aria-expanded", "false");
         but.setAttribute("aria-controls", `articleId-${obj.id}`)  //<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fieldId-<%= obj.id %>" aria-expanded="" aria-controls="fieldId-<%= obj.id %>">
-        but.innerText = obj.title;
+        but.innerHTML = `${obj.title} <br/> Publication Year: ${obj.publication_year}`;
+
+        //for identification in filtering context by date
+        div2.classList.add(`pubYear:${obj.publication_year}`)
 
         const divcoll = document.createElement("div");
         divcoll.id = `articleId-${obj.id}`;
@@ -153,6 +154,76 @@ function addNewArticlesAccordion(filters, target) {
     }
     target.appendChild(div2);
 }
+
+
+//disables the second year filter input when an option is selected that only requires one input.
+const yearSelection = document.querySelector("#yearSelect");
+yearSelection.addEventListener('click', function (e) {
+    const selector = e.target;
+    if (selector.nodeName === "OPTION") {
+        yearfield2 = document.querySelector("#yearFilter");
+        if (selector.hasAttribute("value")) {
+
+            yearfield2.disabled = true;
+        }
+        else {
+            yearfield2.disabled = false;
+        }
+    }
+})
+
+//when the button is pressed filter the articles shown according to the year selected.
+const yearFilterButton = document.querySelector("#yearFilterButton");
+yearFilterButton.addEventListener('click', function (e) {
+    console.log("click");
+    if (value === "From - To") {
+        startyear = yearSelection.nextElementSibling;//first year to filter
+        endyear = startyear.nextElementSibling;//last year to filter
+        for (const article of Articlelist()) {
+            if (article.year < parseInt(startyear.value) || article.year > parseInt(endyear.value)) {
+                article.target.style = "display: none;"
+            }
+            else {
+                article.target.removeAttribute("style");
+            }
+        }
+    } else {
+        year = parseInt(yearSelection.nextElementSibling.value);//year to filter
+        filtertype = parseInt(yearSelection.value);//filter type
+        for (const article of Articlelist()) {
+            if (filtertype === 1 && article.year < year) {
+                article.target.style = "display: none;"
+            } else if (filtertype === 2 && article.year > year) {
+                article.target.style = "display: none;"
+            } else if (filtertype === 3 && article.year !== year) {
+                article.target.style = "display: none;"
+            }
+            else {
+                article.target.removeAttribute("style");
+            }
+        }
+    }
+})
+
+function Articlelist() {
+    const articles = document.querySelector('#accordionfilter');
+    const articlesarray = []
+    for (const element of articles.childNodes) {
+        for (const entry of element.classList.entries()) {
+            const classname = entry[1].toString();
+            if (classname.includes("pubYear:")) {
+                const year = parseInt(classname.replace("pubYear:", ""));
+                const output = {
+                    year: year,
+                    target: element,
+                };
+                articlesarray.push(output);
+            }
+        }
+    }
+    return articlesarray;
+}
+
 
 /* work in progress trying to improve the looks of the filter table;/ used accordion for articles instead. section refersh to old list method
  <section>
