@@ -96,6 +96,10 @@ app.get('/search', async (req, res) => {
   const param = await getMainFields();
   res.render('search', { fields: param });
 });
+app.get('/submit', async (req, res) => {
+  const param = await getMainFields();
+  res.render('input_forms', { fields: param });
+});
 
 
 //called when a new filter is applied to update articles and filter context
@@ -113,6 +117,18 @@ app.post('/search', async (req, res) => {
       articles: art2
     }
     res.json(JSON.stringify(resData));
+  } catch (e) {
+    console.log(e);
+  }
+});
+app.post('/submit', async (req, res) => {
+  try {
+    const parent = req.body.fieldId;
+    //console.log(req);
+    const Children = await getChild(parent);//array
+    //console.log(art2);
+    console.log(Children);
+    res.json(JSON.stringify(Children));
   } catch (e) {
     console.log(e);
   }

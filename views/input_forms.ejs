@@ -7,7 +7,7 @@
     <title>Document</title>
     <link rel="stylesheet" href="/bootstrap.min.css">
     <link rel="stylesheet" href="/styles.css">
-    <script src="/js/jquery-3.7.1.min.js"></script>
+    <script src="/jquery-3.7.1.min.js"></script>
     <script src="/bootstrap.min.js"></script>
 </head>
 
@@ -22,42 +22,101 @@
         <h1 class="large">Scientific Database</h1>
     </div>
 
-    <form action="">
-        <h1>Submission form for new articles</h1>
-        <div class="mb-3">
-            <label for="exampleInputEmail1" class="form-label">Email address</label>
-            <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-            <div id="emailHelp" class="form-text">email</div>
-        </div>
+    <div class="container">
 
-        <div class="input-group" id="authorFName">
-            <span class="input-group-text">Author first name</span>
-            <input type="text" aria-label="First name" class="form-control">
-            <input type="text" aria-label="Last name" class="form-control">
-        </div>
-        <div class="input-group" id="authorLName">
-            <span class="input-group-text">Author first name</span>
-            <input type="text" aria-label="First name" class="form-control">
-            <input type="text" aria-label="Last name" class="form-control">
-        </div>
+        <h2>Submission form for new articles</h2>
 
-        <ul id="search-terms" class="list-group">
-            <% for(const obj of fields){ %>
-                <li class="list-group-item">
-                    <button name="entry-<%=obj.id%>" id="fieldId-<%= obj.id %>" class="selection-button "></button>
-                    <label for="fieldid-<%= obj.id %>">
-                        <%= obj.field_name %>
-                    </label>
-                </li>
-                <% } %>
-        </ul>
+        <section class="border border-1 border-black p-1" id="authors">
+            <h3>Authors</h3>
+            <div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Email</span>
+                    <input type="email" class="form-control" aria-describedby="emailHelp" placeholder="name@ftz.czu.cz">
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Author name</span>
+                    <input type="text" aria-label="First name" class="form-control" placeholder="First Name">
+                    <input type="text" aria-label="Last name" class="form-control" placeholder="Last Name">
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Orcid</span>
+                    <input type="number" aria-label="Orcid number" class="form-control" placeholder="Orcid id">
+                </div>
+            </div>
+            <button class="btn btn-secondary addauthor">New Author</button>
+        </section>
 
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <section class="border border-1 border-black p-1" id="article-data">
+            <h3>article information</h3>
+            <div class="input-group mb-3">
+                <span class="input-group-text">DOI https://doi.org/</span>
+                <input type="text" class="form-control" aria-describedby="doi"
+                    placeholder="10.1016/j.enconman.2024.118816">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Title</span>
+                <input type="text" class="form-control" aria-describedby="title" placeholder="Article Title">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Abstract</span>
+                <textarea class="form-control" aria-label="abstract"></textarea>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Year</span>
+                <input type="number" class="form-control" aria-describedby="title" placeholder="Publication Year">
+            </div>
+        </section>
+
+        <section class="border border-1 border-black mt-1 p-1" id="categories">
+            <h3>Categories</h3>
+            <h4>please select the elements that are relevant to your work</h4>
+            <ul id="search-terms" class="list-group mb-3">
+                <% for(const obj of fields){ %>
+                    <li class="list-group-item">
+                        <button name="entry-<%=obj.id%>" id="fieldId-<%= obj.id %>" class="selection-button "></button>
+                        <label for="fieldid-<%= obj.id %>">
+                            <%= obj.field_name %>
+                        </label>
+                    </li>
+                    <% } %>
+                        <li class="list-group-item">
+                            <button class="addFieldButton btn btn-secondary">Add New Field</button>
+                        </li>
+            </ul>
+        </section>
+        <nav class="border border-1 border-black mt-1 p-1" id="results">
+            <h3>Results</h3>
+            <h4>Please, select the appropiate result type, try to focus on relevant result for search functions and
+                comparison</h4>
 
 
-    </form>
+            <div class="container text-start" id="newvalueselection">
+                <div class="row justify-content-md-center">
+                    <div class="col col-2">
+                        <select id="valueselection" class="form-select col col-2" aria-label="Default select example">
+                            <option selected>Select data type</option>
+                            <option value="1">value</option>
+                            <option value="2">Boolean</option>
+                            <option value="3">text</option>
+                        </select>
+                    </div>
+                    <div class="col col-2">
+                        <button id="addresult" class="btn btn-secondary">Add New Result</button>
+                    </div>
+                    <div class="col-8">
+                    </div>
+
+                </div>
+
+
+        </nav>
+
+        <button type="submit" class="btn btn-success m-1">Submit</button>
+    </div>
 
     <%- include('partials/footer') %>
+        <script src="/formFunctions.js"></script>
+        <script src="/resultsoutput.js"></script>
 </body>
 
 </html>
