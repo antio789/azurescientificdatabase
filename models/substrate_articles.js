@@ -1,4 +1,4 @@
-import {dbSubstrate} from "./db";
+const { dbSubstrate } = require('./database');
 const db= dbSubstrate;
 
 //get the fields that do not have a parent considered as the starting point for filtering
@@ -18,12 +18,31 @@ function getMainFields() {
 // (where tech_id in ids "placeholders") => select all articles that have these fields
 // 2. group by article_ids, then for each article_id count the number of fields => For each `article_id` group, the query calculates the number of distinct `field_id` values within that group. The `DISTINCT field_id` ensures that duplicate `field_id` entries in the same group are only counted once.
 // HAVING(COUNT...) = id.length: articles that have the numbers of field required, filters out the articles that are missing a filter
-function getArticles(...ids) {
-    const idArray = ids;
+function getArticles(fieldIds,categoryIds) {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
-            const placeholders = idArray.map(() => '?').join(', ');
-            db.all(`SELECT id,title,abstract,doi,publication_year from Articles where id in (SELECT article_content.article_id from article_content where field_id in (${placeholders}) group by article_id having count(distinct field_id) = ?);`,[...idArray,idArray.length],
+            const fieldPlaceholders = fieldIds.map(() => '?').join(', ');
+            const substratePlaceholders = categoryIds.map(() => '?').join(', ');
+            let basequery = `SELECT id,title,abstract,doi,publication_year 
+                from Articles 
+                where id in (
+                    SELECT article_content.article_id 
+                    from article_content 
+                    where field_id in (${fieldPlaceholders}) 
+                    group by article_id having count(distinct field_id) = ?
+                )`;
+            const queryParams = [...fieldIds,fieldIds.length];
+            let substratequery = `AND id IN(SELECT article_substrate.article_id 
+                    FROM article_substrate 
+                    WHERE category_id IN (${substratePlaceholders}) 
+                    GROUP BY article_id 
+                    HAVING COUNT(DISTINCT category_id) = ?
+                )`;
+            if(categoryIds && categoryIds.length>0){
+                basequery += substratequery;
+                queryParams.push(...categoryIds,categoryIds.length);
+            }
+            db.all(basequery,queryParams,
                 (err, rows) => {
                     if (err) { return reject(err); }
                     resolve(rows);
@@ -104,3 +123,10 @@ function getArticleSubstrates(article_id) {
 }
 //to do getsubstratecategory()
 // get substrate
+module.exports = {
+    getMainFields,
+    getChild,
+    getArticles,
+    getSubstrate_categories
+};
+

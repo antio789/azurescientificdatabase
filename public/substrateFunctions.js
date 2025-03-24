@@ -5,38 +5,73 @@
 when a button is clicked to remove that filter a request for refresh is send to obtain the new list of articles
 */
 const anchorElement = document.querySelector(`#search-terms`);
+const substrateElement = document.querySelector(`#substrate_categories`);
+
 anchorElement.addEventListener('click', function (e) {
     const but = e.target;
     if (but.classList.contains("selection-button")) {
         but.classList.toggle("active");
         const active = document.querySelectorAll('#search-terms .active');
+        const substrate = document.querySelectorAll('#substrate_categories .active');
         const activeIds = [];
+        const substrateIds = [];
         for (const activeButton of active) {
             const id = activeButton.id.replace('fieldId-', '');
             activeIds.push(parseInt(id));
+        }
+        for (const activeButton of substrate) {
+            const id = activeButton.id.replace('fieldId-', '');
+            substrateIds.push(parseInt(id));
         }
         //fetch the corresponding when the filter is a new one added
         if (but.classList.contains("active")) {
             //query and insert new fields
 
-            fetchArticles(parseInt(but.id.replace('fieldId-', '')), but, activeIds);//need to get id.
+            fetchArticles(parseInt(but.id.replace('fieldId-', '')), but, activeIds,substrateIds);//need to get id.
         } else {
             const label = but.nextElementSibling;
             label.removeChild(label.lastChild);
             console.log(activeIds);
-            refreshArticles(activeIds);
+            refreshArticles(activeIds,substrateIds);
         }
     }
 })
 
-// fetch id: send the id that needs new children to be displayed,
+substrateElement.addEventListener('click', function (e) {
+    const but = e.target;
+    if (but.classList.contains("selection-button")) {
+        but.classList.toggle("active");
+        const active = document.querySelectorAll('#substrate_categories .active');
+        const fields = document.querySelectorAll('#search-terms .active');
+        const activeIds = [];
+        const fieldsIds = [];
+        for (const activeButton of active) {
+            const id = activeButton.id.replace('fieldId-', '');
+            activeIds.push(parseInt(id));
+        }
+        for (const field of fields) {
+            const id = field.id.replace('fieldId-', '');
+            fieldsIds.push(parseInt(id));
+        }
+        //fetch the corresponding when the filter is a new one added
+        if (but.classList.contains("active")) {
+            //query and insert new fields
+
+            fetchArticles(0, but,fieldsIds, activeIds);//need to get id.
+        } else {
+            refreshArticles(fieldsIds,activeIds);
+        }
+    }
+})
+
+// fetch id: send the id that needs new children to be displayed, 0 if not necessary
 // target: the button in question, indicating where the children should be added
 // activeIds: all the selected filters to fetch the articles.
-function fetchArticles(id, target, activeIds) {
-    fetch('/search', {
+function fetchArticles(id, target, fieldsIds,substrateIds) {
+    fetch('/substrate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fieldId: id, filters: activeIds })
+        body: JSON.stringify({ fieldId: id, filters: fieldsIds,substrate:substrateIds })
     })
         .then(response => response.json())
         .then(data => {
@@ -45,19 +80,21 @@ function fetchArticles(id, target, activeIds) {
 
             //addNewArticles(response.articles, articlelist);
             // Update child fields
-            addNewFilters(response.children, target);
+            if(id>0) {
+                addNewFilters(response.children, target);
+            }
             //console.log(target.nextElementSibling);
 
             addNewArticlesAccordion(response.articles, document.querySelector("#accordionfilter"))
         })
         .catch(err => console.error('Error fetching articles:', err));
-};
+}
 
-function refreshArticles(activeIds) {
-    fetch('/search/refresh', {
+function refreshArticles(fieldIds,substrateIds) {
+    fetch('/substrate/refresh', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filters: activeIds })
+        body: JSON.stringify({ filters: fieldIds,substrate:substrateIds })
     })
         .then(response => response.json())
         .then(data => {
@@ -79,7 +116,7 @@ function addNewFilters(filters, target) {
         button.name = `entry-${obj.id}`
         const lab = document.createElement('label');
         lab.for = `fieldId-${obj.id}`;
-        lab.innerText = obj.field_name;
+        lab.innerText = obj.name;
         lab.classList.add("text-capitalize");
         li.append(button);
         li.append(lab);
@@ -95,12 +132,6 @@ function addNewArticles(articles, target) {
     for (const obj of articles) {
         const li = document.createElement('li');
         li.innerText = obj.title;
-        for (const author of obj.authors) {
-            const p = document.createElement('p');
-            console.log(author);
-            p.innerHTML = `<b> -${author.first_name}, ${author.last_name}</b>`;
-            li.append(p);
-        }
         target.append(li);
     }
 }
@@ -140,15 +171,6 @@ function addNewArticlesAccordion(filters, target) {
         divchild.classList.add("accordion-body");
         divchild.innerText = obj.abstract;
 
-        for (const author of obj.authors) {
-            const p = document.createElement('p');
-            console.log(author);
-            p.innerHTML = `<b> -${author.first_name}, ${author.last_name}</b> <a class="btn btn-outline-success" href="https://orcid.org/${author.orcid}" role="button">Orcid</a>
-`;
-            p.classList.add("mt-2")
-            divchild.append(p);
-        }
-
         h2.appendChild(but);
         a.classList.add("ms-2");
         but.appendChild(a);
@@ -167,7 +189,6 @@ yearSelection.addEventListener('click', function (e) {
     if (selector.nodeName === "OPTION") {
         yearfield2 = document.querySelector("#yearFilter");
         if (selector.hasAttribute("value")) {
-
             yearfield2.disabled = true;
         }
         else {

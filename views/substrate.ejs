@@ -32,10 +32,24 @@
                             <button name="entry-<%=obj.id%>" id="fieldId-<%= obj.id %>"
                                 class="selection-button "></button>
                             <label class="text-capitalize" for="fieldid-<%= obj.id %>">
-                                <%= obj.field_name %>
+                                <%= obj.name %>
                             </label>
                         </li>
+
                         <% } %>
+                </ul>
+
+                <ul id="substrate_categories" class="list-group pt-2">
+                    <% for(const obj of substrate){ %>
+                    <li class="list-group-item">
+                        <button name="entry-<%=obj.id%>" id="fieldId-<%= obj.id %>"
+                                class="selection-button "></button>
+                        <label class="text-capitalize" for="fieldid-<%= obj.id %>">
+                            <%= obj.name %>
+                        </label>
+                    </li>
+                    <% } %>
+                </ul>
                             <div class="input-group mt-3">
                                 <select class="form-select" id="yearSelect">
                                     <option selected>From - To</option>
@@ -46,9 +60,11 @@
                                 <input type="text" aria-label="Year" class="form-control" placeholder="Year">
                                 <input type="text" aria-label="Year" class="form-control" id="yearFilter"
                                     placeholder="Year">
+
                             </div>
-                            <button class="btn btn-secondary btn-sm mb-3" id="yearFilterButton">Apply</button>
-                </ul>
+                <button class="btn btn-secondary btn-sm mb-3 w-100" id="yearFilterButton">Apply</button>
+
+
             </div>
             <div class="col-9 border border-dark-subtle rounded bg-dark-subtle" id="articles-section">
 
@@ -62,7 +78,7 @@
 
     <%- include('partials/footer') %>
 
-        <script src="/searchFunctions.js"></script>
+        <script src="/substrateFunctions.js"></script>
 </body>
 
 </html>

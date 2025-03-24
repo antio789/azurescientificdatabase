@@ -1,12 +1,10 @@
-import {dbBRT} from "./db";
-const db= dbBRT;
-
+const { dbBRT } = require('./database');
 
 //get the fields that do not have a parent considered as the starting point for filtering
 function getMainFields() {
     return new Promise(function (resolve, reject) {
-        db.serialize(() => {
-            db.all("select id, field_name from fields where fields.id not in (select child from fields_tree);", (err, rows) => {
+        dbBRT.serialize(() => {
+            dbBRT.all("select id, field_name from fields where fields.id not in (select child from fields_tree);", (err, rows) => {
                 if (err) { return reject(err); }
                 resolve(rows);
             });
@@ -20,8 +18,8 @@ function getChild(id) {
     //console.log(id);
     if (!id) { throw new Error("id is not a number") }
     return new Promise(function (resolve, reject) {
-        db.serialize(() => {
-            db.all(`select id,field_name from fields where id in (select child from fields_tree where parent = ?);`,[id] ,(err, rows) => {
+        dbBRT.serialize(() => {
+            dbBRT.all(`select id,field_name from fields where id in (select child from fields_tree where parent = ?);`,[id] ,(err, rows) => {
                 if (err) { return reject(err); }
                 resolve(rows);
             });
@@ -37,9 +35,9 @@ function getChild(id) {
 function getArticles(...ids) {
     const idArray = ids;
     return new Promise(function (resolve, reject) {
-        db.serialize(() => {
+        dbBRT.serialize(() => {
             const placeholders = idArray.map(() => '?').join(', ');
-            db.all(`SELECT id,title,abstract,doi,publication_year from Articles where id in (SELECT article_content.article_id from article_content where tech_id in (${placeholders}) group by article_id having count(distinct tech_id) = ?);`,[...idArray,idArray.length],
+            dbBRT.all(`SELECT id,title,abstract,doi,publication_year from Articles where id in (SELECT article_content.article_id from article_content where tech_id in (${placeholders}) group by article_id having count(distinct tech_id) = ?);`,[...idArray,idArray.length],
                 (err, rows) => {
                     if (err) { return reject(err); }
                     resolve(rows);
@@ -63,8 +61,8 @@ async function getArticlesWithAuthors(...ids) {
 function getAuthors(id) {
     return new Promise(function (resolve, reject) {
         if (!id || Number.isNaN(id)) { reject("not a valid number") }
-        db.serialize(() => {
-            db.all(`Select first_name, last_name,orcid from authors where id in (select author_id from article_authors where article_id=?);`,[id],
+        dbBRT.serialize(() => {
+            dbBRT.all(`Select first_name, last_name,orcid from authors where id in (select author_id from article_authors where article_id=?);`,[id],
                 (err, rows) => {
                     if (err) { return reject(err); }
                     resolve(rows);

@@ -27,7 +27,7 @@ app.use(bodyParser.json());
 app.use('/', indexRouter);
 app.use('/search', searchRouter);
 app.use('/submit', submitRouter);
-app.use('/substrate', submitRouter);
+app.use('/substrate', substrateRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
