@@ -1,50 +1,56 @@
-const { dbSubstrate } = require('./database');
-const db= dbSubstrate;
+const {dbSubstrate} = require('./database');
+const db = dbSubstrate;
+const fs = require('fs');
+const {Parser} = require('json2csv');
+
 
 //get the fields that do not have a parent considered as the starting point for filtering
 function getMainFields() {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
             db.all("select id, name from fields where fields.id not in (select child from field_tree);", (err, rows) => {
-                if (err) { return reject(err); }
+                if (err) {
+                    return reject(err);
+                }
                 resolve(rows);
             });
         })
     })
 }
 
-//get articles based on filters [ids],
+//get articles based on filters [fieldIds,categoryIds],
 //works by selecting all (and only those) articles that have all the selected filters
 // (where tech_id in ids "placeholders") => select all articles that have these fields
 // 2. group by article_ids, then for each article_id count the number of fields => For each `article_id` group, the query calculates the number of distinct `field_id` values within that group. The `DISTINCT field_id` ensures that duplicate `field_id` entries in the same group are only counted once.
 // HAVING(COUNT...) = id.length: articles that have the numbers of field required, filters out the articles that are missing a filter
-function getArticles(fieldIds,categoryIds) {
+function getArticles(fieldIds, categoryIds) {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
             const fieldPlaceholders = fieldIds.map(() => '?').join(', ');
             const substratePlaceholders = categoryIds.map(() => '?').join(', ');
-            let basequery = `SELECT id,title,abstract,doi,publication_year 
-                from Articles 
-                where id in (
-                    SELECT article_content.article_id 
-                    from article_content 
-                    where field_id in (${fieldPlaceholders}) 
-                    group by article_id having count(distinct field_id) = ?
-                )`;
-            const queryParams = [...fieldIds,fieldIds.length];
+            let basequery = `SELECT id, title, abstract, doi, publication_year
+                             from Articles
+                             where id in (SELECT article_content.article_id
+                                          from article_content
+                                          where field_id in (${fieldPlaceholders})
+                                          group by article_id
+                                          having count(distinct field_id) = ?)`;
+            const queryParams = [...fieldIds, fieldIds.length];
             let substratequery = `AND id IN(SELECT article_substrate.article_id 
                     FROM article_substrate 
                     WHERE category_id IN (${substratePlaceholders}) 
                     GROUP BY article_id 
                     HAVING COUNT(DISTINCT category_id) = ?
                 )`;
-            if(categoryIds && categoryIds.length>0){
+            if (categoryIds && categoryIds.length > 0) {
                 basequery += substratequery;
-                queryParams.push(...categoryIds,categoryIds.length);
+                queryParams.push(...categoryIds, categoryIds.length);
             }
-            db.all(basequery,queryParams,
+            db.all(basequery, queryParams,
                 (err, rows) => {
-                    if (err) { return reject(err); }
+                    if (err) {
+                        return reject(err);
+                    }
                     resolve(rows);
                 });
         })
@@ -55,11 +61,17 @@ function getArticles(fieldIds,categoryIds) {
 function getChild(id) {
     const parentrow = parseInt(id);
     //console.log(id);
-    if (!id) { throw new Error("id is not a number") }
+    if (!id) {
+        throw new Error("id is not a number")
+    }
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
-            db.all(`select id,name from fields where id in (select child from field_tree where parent = ?);`,[id] ,(err, rows) => {
-                if (err) { return reject(err); }
+            db.all(`select id, name
+                    from fields
+                    where id in (select child from field_tree where parent = ?);`, [id], (err, rows) => {
+                if (err) {
+                    return reject(err);
+                }
                 resolve(rows);
             });
         })
@@ -70,8 +82,11 @@ function getChild(id) {
 function getSubstrate_categories() {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
-            db.all(`select id,name from substrate_category` ,(err, rows) => {
-                if (err) { return reject(err); }
+            db.all(`select id, name
+                    from substrate_category`, (err, rows) => {
+                if (err) {
+                    return reject(err);
+                }
                 resolve(rows);
             });
         })
@@ -81,8 +96,12 @@ function getSubstrate_categories() {
 function getSubstrateNames(category_id) {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
-            db.all(`select id,name from substrate_name where substrate_name.parent_id = ?`,[category_id] ,(err, rows) => {
-                if (err) { return reject(err); }
+            db.all(`select id, name
+                    from substrate_name
+                    where substrate_name.parent_id = ?`, [category_id], (err, rows) => {
+                if (err) {
+                    return reject(err);
+                }
                 resolve(rows);
             });
         })
@@ -92,41 +111,48 @@ function getSubstrateNames(category_id) {
 function getSubstrateTypes(substrate_id) {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
-            db.all(`select id,name from substrate_type where substrate_type.parent_id = ?`,[substrate_id] ,(err, rows) => {
-                if (err) { return reject(err); }
+            db.all(`select id, name
+                    from substrate_type
+                    where substrate_type.parent_id = ?`, [substrate_id], (err, rows) => {
+                if (err) {
+                    return reject(err);
+                }
                 resolve(rows);
             });
         })
     })
 }
+
 //get the substrate category, name and type for an article from article_substrate
 function getArticleSubstrates(article_id) {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
-            db.all(`SELECT
-                           substrate_category.name AS category,
-                           substrate_name.name AS name,
-                           substrate_type.name AS type
-                       FROM
-                           article_substrate
-                               LEFT JOIN substrate_category ON article_substrate.category_id = substrate_category.id
-                               LEFT JOIN substrate_name ON article_substrate.name_id = substrate_name.id
-                               LEFT JOIN substrate_type ON article_substrate.type_id = substrate_type.id
-                       WHERE
-                           article_substrate.article_id = ?`,
-                [article_id] ,(err, rows) => {
-                if (err) { return reject(err); }
-                resolve(rows);
-            });
+            db.all(`SELECT substrate_category.name AS category,
+                           substrate_name.name     AS name,
+                           substrate_type.name     AS type
+                    FROM article_substrate
+                             LEFT JOIN substrate_category ON article_substrate.category_id = substrate_category.id
+                             LEFT JOIN substrate_name ON article_substrate.name_id = substrate_name.id
+                             LEFT JOIN substrate_type ON article_substrate.type_id = substrate_type.id
+                    WHERE article_substrate.article_id = ?`,
+                [article_id], (err, rows) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(rows);
+                });
         })
     })
 }
+
+
 //to do getsubstratecategory()
 // get substrate
 module.exports = {
     getMainFields,
     getChild,
     getArticles,
-    getSubstrate_categories
+    getSubstrate_categories,
+    getArticleSubstrates
 };
 

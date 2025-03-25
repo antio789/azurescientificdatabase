@@ -12,73 +12,107 @@
 </head>
 
 <body>
-    <figure class="col text-start" id="home">
-        <a href="/" title="BioResources &amp; Technology" role="link">
-            <img src="brt.png" title="BioResources &amp; Technology" role="banner" alt="BioResources &amp; Technology"
-                aria-label="BioResources &amp; Technology" class="img-fluid">
-        </a>
-    </figure>
-    <div class="head p-2">
-        <h1 class="large">Scientific Database</h1>
-    </div>
+<figure class="col text-start" id="home">
+    <a href="/" title="BioResources &amp; Technology" role="link">
+        <img src="brt.png" title="BioResources &amp; Technology" role="banner" alt="BioResources &amp; Technology"
+             aria-label="BioResources &amp; Technology" class="img-fluid">
+    </a>
+</figure>
+<div class="head p-2">
+    <h1 class="large">Scientific Database</h1>
+    <h2 class="medium">Substrate classification - Proof of Concept</h2>
+</div>
 
-    <div class="container-fluid">
-        <div class="row align-items-start">
-            <div class="col">
-                <h2>search querries</h2>
-                <ul id="search-terms" class="list-group">
-                    <% for(const obj of fields){ %>
-                        <li class="list-group-item">
-                            <button name="entry-<%=obj.id%>" id="fieldId-<%= obj.id %>"
-                                class="selection-button "></button>
-                            <label class="text-capitalize" for="fieldid-<%= obj.id %>">
-                                <%= obj.name %>
-                            </label>
-                        </li>
+<div class="container-fluid">
+    <div class="row align-items-start">
+        <div class="col">
 
-                        <% } %>
-                </ul>
+            <div class="accordion pt-2" id="accordion_pretreatment">
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseZero" aria-expanded="false" aria-controls="collapseOne">
+                            Pretreatment
+                        </button>
+                    </h3>
+                    <div id="collapseZero" class="accordion-collapse collapse" data-bs-parent="#accordion_pretreatment">
+                        <div class="accordion-body">
 
-                <ul id="substrate_categories" class="list-group pt-2">
-                    <% for(const obj of substrate){ %>
-                    <li class="list-group-item">
-                        <button name="entry-<%=obj.id%>" id="fieldId-<%= obj.id %>"
-                                class="selection-button "></button>
-                        <label class="text-capitalize" for="fieldid-<%= obj.id %>">
-                            <%= obj.name %>
-                        </label>
-                    </li>
-                    <% } %>
-                </ul>
-                            <div class="input-group mt-3">
-                                <select class="form-select" id="yearSelect">
-                                    <option selected>From - To</option>
-                                    <option value="1">From Year</option>
-                                    <option value="2">To Year</option>
-                                    <option value="3">Exact Year</option>
-                                </select>
-                                <input type="text" aria-label="Year" class="form-control" placeholder="Year">
-                                <input type="text" aria-label="Year" class="form-control" id="yearFilter"
-                                    placeholder="Year">
+                            <ul id="search-terms" class="list-group">
+                                <% for(const obj of fields){ %>
+                                    <li class="list-group-item">
+                                        <button name="entry-<%= obj.id %>" id="fieldId-<%= obj.id %>"
+                                                class="selection-button "></button>
+                                        <label class="text-capitalize" for="fieldid-<%= obj.id %>">
+                                            <%= obj.name %>
+                                        </label>
+                                    </li>
 
-                            </div>
-                <button class="btn btn-secondary btn-sm mb-3 w-100" id="yearFilterButton">Apply</button>
+                                <% } %>
+                            </ul>
 
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion pt-3" id="accordion_Substrate">
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                            Substrates
+                        </button>
+                    </h3>
+                    <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordion_Substrate">
+                        <div class="accordion-body">
+
+                            <ul id="substrate_categories" class="list-group pt-2 accordion">
+                                <% for(const obj of substrate){ %>
+                                    <li class="list-group-item">
+                                        <button name="entry-<%= obj.id %>" id="fieldId-<%= obj.id %>"
+                                                class="selection-button "></button>
+                                        <label class="text-capitalize" for="fieldid-<%= obj.id %>">
+                                            <%= obj.name %>
+                                        </label>
+                                    </li>
+                                <% } %>
+                            </ul>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group mt-3">
+                <select class="form-select" id="yearSelect">
+                    <option selected>From - To</option>
+                    <option value="1">From Year</option>
+                    <option value="2">To Year</option>
+                    <option value="3">Exact Year</option>
+                </select>
+                <input type="text" aria-label="Year" class="form-control" placeholder="Year">
+                <input type="text" aria-label="Year" class="form-control" id="yearFilter"
+                       placeholder="Year">
 
             </div>
-            <div class="col-9 border border-dark-subtle rounded bg-dark-subtle" id="articles-section">
+            <button class="btn btn-secondary btn-sm mb-3 w-100" id="yearFilterButton">Apply</button>
 
-                <h2>Articles</h2>
-                <div class="accordion" id="accordionfilter">
 
-                </div>
+        </div>
+        <div class="col-9 border border-dark-subtle rounded bg-dark-subtle" id="articles-section">
+
+            <h2>Articles</h2>
+            <div class="accordion" id="accordionfilter">
+
             </div>
         </div>
     </div>
+</div>
+<button id="exportbutton">export to csv</button>
+<%- include('partials/footer') %>
 
-    <%- include('partials/footer') %>
-
-        <script src="/substrateFunctions.js"></script>
+<script src="/substrateFunctions.js"></script>
 </body>
 
 </html>

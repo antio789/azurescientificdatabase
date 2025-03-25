@@ -1,11 +1,13 @@
-const { dbBRT } = require('./database');
+const {dbBRT} = require('./database');
 
 //get the fields that do not have a parent considered as the starting point for filtering
 function getMainFields() {
     return new Promise(function (resolve, reject) {
         dbBRT.serialize(() => {
             dbBRT.all("select id, field_name from fields where fields.id not in (select child from fields_tree);", (err, rows) => {
-                if (err) { return reject(err); }
+                if (err) {
+                    return reject(err);
+                }
                 resolve(rows);
             });
         })
@@ -16,11 +18,17 @@ function getMainFields() {
 function getChild(id) {
     const parentrow = parseInt(id);
     //console.log(id);
-    if (!id) { throw new Error("id is not a number") }
+    if (!id) {
+        throw new Error("id is not a number")
+    }
     return new Promise(function (resolve, reject) {
         dbBRT.serialize(() => {
-            dbBRT.all(`select id,field_name from fields where id in (select child from fields_tree where parent = ?);`,[id] ,(err, rows) => {
-                if (err) { return reject(err); }
+            dbBRT.all(`select id, field_name
+                       from fields
+                       where id in (select child from fields_tree where parent = ?);`, [id], (err, rows) => {
+                if (err) {
+                    return reject(err);
+                }
                 resolve(rows);
             });
         })
@@ -37,9 +45,17 @@ function getArticles(...ids) {
     return new Promise(function (resolve, reject) {
         dbBRT.serialize(() => {
             const placeholders = idArray.map(() => '?').join(', ');
-            dbBRT.all(`SELECT id,title,abstract,doi,publication_year from Articles where id in (SELECT article_content.article_id from article_content where tech_id in (${placeholders}) group by article_id having count(distinct tech_id) = ?);`,[...idArray,idArray.length],
+            dbBRT.all(`SELECT id, title, abstract, doi, publication_year
+                       from Articles
+                       where id in (SELECT article_content.article_id
+                                    from article_content
+                                    where tech_id in (${placeholders})
+                                    group by article_id
+                                    having count(distinct tech_id) = ?);`, [...idArray, idArray.length],
                 (err, rows) => {
-                    if (err) { return reject(err); }
+                    if (err) {
+                        return reject(err);
+                    }
                     resolve(rows);
                 });
         })
@@ -60,11 +76,17 @@ async function getArticlesWithAuthors(...ids) {
 //get authors from article id
 function getAuthors(id) {
     return new Promise(function (resolve, reject) {
-        if (!id || Number.isNaN(id)) { reject("not a valid number") }
+        if (!id || Number.isNaN(id)) {
+            reject("not a valid number")
+        }
         dbBRT.serialize(() => {
-            dbBRT.all(`Select first_name, last_name,orcid from authors where id in (select author_id from article_authors where article_id=?);`,[id],
+            dbBRT.all(`Select first_name, last_name, orcid
+                       from authors
+                       where id in (select author_id from article_authors where article_id = ?);`, [id],
                 (err, rows) => {
-                    if (err) { return reject(err); }
+                    if (err) {
+                        return reject(err);
+                    }
                     resolve(rows);
                 });
         })

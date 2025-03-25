@@ -1,4 +1,3 @@
-
 /*adds an event listener on click for all buttons inside the filter ul,
     for the active filters their id (primary key) is retrieved.
     it is stored as fieldId-x, thus 'fieldId-' is first removed before fetching data
@@ -6,6 +5,36 @@ when a button is clicked to remove that filter a request for refresh is send to 
 */
 const anchorElement = document.querySelector(`#search-terms`);
 const substrateElement = document.querySelector(`#substrate_categories`);
+const exportbutton = document.querySelector(`#exportbutton`);
+exportbutton.addEventListener('click', async function (e) {
+    const filters = document.querySelectorAll('#search-terms .active');
+    const substrate = document.querySelectorAll('#substrate_categories .active');
+    const fieldIds = [];
+    const substrateIds = [];
+    for (const activeButton of filters) {
+        const id = activeButton.id.replace('fieldId-', '');
+        fieldIds.push(parseInt(id));
+    }
+    for (const activeButton of substrate) {
+        const id = activeButton.id.replace('fieldId-', '');
+        substrateIds.push(parseInt(id));
+    }
+    fetch('/substrate/export', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({filters: fieldIds, substrate: substrateIds})
+    })
+        .then(async response => {
+            console.log(response);
+            const blob = await response.blob();
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'customers.csv';
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(link.href), 0)
+        })
+})
 
 anchorElement.addEventListener('click', function (e) {
     const but = e.target;
@@ -27,12 +56,12 @@ anchorElement.addEventListener('click', function (e) {
         if (but.classList.contains("active")) {
             //query and insert new fields
 
-            fetchArticles(parseInt(but.id.replace('fieldId-', '')), but, activeIds,substrateIds);//need to get id.
+            fetchArticles(parseInt(but.id.replace('fieldId-', '')), but, activeIds, substrateIds);//need to get id.
         } else {
             const label = but.nextElementSibling;
             label.removeChild(label.lastChild);
             console.log(activeIds);
-            refreshArticles(activeIds,substrateIds);
+            refreshArticles(activeIds, substrateIds);
         }
     }
 })
@@ -57,9 +86,9 @@ substrateElement.addEventListener('click', function (e) {
         if (but.classList.contains("active")) {
             //query and insert new fields
 
-            fetchArticles(0, but,fieldsIds, activeIds);//need to get id.
+            fetchArticles(0, but, fieldsIds, activeIds);//need to get id.
         } else {
-            refreshArticles(fieldsIds,activeIds);
+            refreshArticles(fieldsIds, activeIds);
         }
     }
 })
@@ -67,11 +96,11 @@ substrateElement.addEventListener('click', function (e) {
 // fetch id: send the id that needs new children to be displayed, 0 if not necessary
 // target: the button in question, indicating where the children should be added
 // activeIds: all the selected filters to fetch the articles.
-function fetchArticles(id, target, fieldsIds,substrateIds) {
+function fetchArticles(id, target, fieldsIds, substrateIds) {
     fetch('/substrate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fieldId: id, filters: fieldsIds,substrate:substrateIds })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({fieldId: id, filters: fieldsIds, substrate: substrateIds})
     })
         .then(response => response.json())
         .then(data => {
@@ -80,7 +109,7 @@ function fetchArticles(id, target, fieldsIds,substrateIds) {
 
             //addNewArticles(response.articles, articlelist);
             // Update child fields
-            if(id>0) {
+            if (id > 0) {
                 addNewFilters(response.children, target);
             }
             //console.log(target.nextElementSibling);
@@ -90,11 +119,11 @@ function fetchArticles(id, target, fieldsIds,substrateIds) {
         .catch(err => console.error('Error fetching articles:', err));
 }
 
-function refreshArticles(fieldIds,substrateIds) {
+function refreshArticles(fieldIds, substrateIds) {
     fetch('/substrate/refresh', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filters: fieldIds,substrate:substrateIds })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({filters: fieldIds, substrate: substrateIds})
     })
         .then(response => response.json())
         .then(data => {
@@ -123,17 +152,6 @@ function addNewFilters(filters, target) {
         ul.append(li);
     }
     target.nextElementSibling.append(ul);
-}
-
-function addNewArticles(articles, target) {
-    while (target.firstChild) {
-        target.removeChild(target.lastChild);
-    }
-    for (const obj of articles) {
-        const li = document.createElement('li');
-        li.innerText = obj.title;
-        target.append(li);
-    }
 }
 
 function addNewArticlesAccordion(filters, target) {
@@ -177,6 +195,8 @@ function addNewArticlesAccordion(filters, target) {
         div2.appendChild(h2);
         divcoll.appendChild(divchild);
         div2.appendChild(divcoll);
+        const p_substrate = document.createElement("p");
+        p_substrate.classList.add("mt-2");
     }
     target.appendChild(div2);
 }
@@ -190,8 +210,7 @@ yearSelection.addEventListener('click', function (e) {
         yearfield2 = document.querySelector("#yearFilter");
         if (selector.hasAttribute("value")) {
             yearfield2.disabled = true;
-        }
-        else {
+        } else {
             yearfield2.disabled = false;
         }
     }
@@ -208,8 +227,7 @@ yearFilterButton.addEventListener('click', function (e) {
         for (const article of Articlelist()) {
             if (article.year < parseInt(startyear.value) || article.year > parseInt(endyear.value)) {
                 article.target.style = "display: none;"
-            }
-            else {
+            } else {
                 article.target.removeAttribute("style");
             }
         }
@@ -223,8 +241,7 @@ yearFilterButton.addEventListener('click', function (e) {
                 article.target.style = "display: none;"
             } else if (filtertype === 3 && article.year !== year) {
                 article.target.style = "display: none;"
-            }
-            else {
+            } else {
                 article.target.removeAttribute("style");
             }
         }
@@ -250,114 +267,3 @@ function Articlelist() {
     return articlesarray;
 }
 
-
-/* work in progress trying to improve the looks of the filter table;/ used accordion for articles instead. section refersh to old list method
- <section>
-                    <h2>articles output</h2>
-                    <ul id="articles"></ul>
-                </section>
-
-const accord = document.querySelector("#accordionfilter");
-accord.addEventListener("click", function (e) {
-    const but = e.target;
-    if (but.classList.contains('accordion-button')) {
-        const active = document.querySelectorAll('.accordion-button');
-        const activeIds = [];
-        for (const activeButton of active) {
-            if (!activeButton.classList.contains("collapsed")) {
-                const id = activeButton.id.replace("fieldId-", "");
-                activeIds.push(parseInt(id));
-            }
-        }
-        if (!but.classList.contains("collapsed")) {
-            console.log(but.id);
-            console.log(but.id.replace('fieldId-', ''));
-            fetchArticles2(parseInt(but.id.replace('fieldId-', '')), but, activeIds);
-        } else {
-            console.log(but.parentElement.nextElementSibling.children[0]);
-            const accordionBody = but.parentElement.nextElementSibling.children[0];
-            while (accordionBody.firstChild) {
-                accordionBody.removeChild(accordionBody.lastChild);
-            }
-            //refreshArticles2(activeIds);
-        }
-    }
-})
-
-function fetchArticles2(id, target, activeIds) {
-    fetch('/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fieldId: id, filters: activeIds })
-    })
-        .then(response => response.json())
-        .then(data => {
-            const response = JSON.parse(data);
-            console.log(response);
-            // Update the article list
-            const articlelist = document.querySelector("#articles");
-            //addNewArticles(response.articles, articlelist);
-            // Update child fields
-            addNewFilters2(response.children, target);
-            //console.log(target.nextElementSibling);
-        })
-        .catch(err => console.error('Error fetching articles:', err));
-};
-
-function addNewFilters2(filters, target) {
-    const div = document.createElement("div");
-    div.classList.add("accordion");
-    for (const obj of filters) {
-        const div2 = document.createElement("div");
-        div2.classList.add("accordion-item"); //<div class="accordion-item">
-
-        const h2 = document.createElement("h2");
-        h2.classList.add("accordion-header");   //<h2 class="accordion-header"></h2>
-
-        const but = document.createElement("button");
-        but.classList.add("accordion-button", "collapsed");
-        but.setAttribute('type', 'button');
-        but.setAttribute('data-bs-toggle', 'collapse');
-        but.setAttribute('data-bs-target', `#fieldId-${obj.id}`);
-        but.setAttribute("aria-expanded", "");
-        but.setAttribute("aria-controls", `fieldId-${obj.id}`)  //<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fieldId-<%= obj.id %>" aria-expanded="" aria-controls="fieldId-<%= obj.id %>">
-        but.innerText = obj.field_name;
-
-        const divcoll = document.createElement("div");
-        divcoll.id = `fieldId-${obj.id}`;
-        divcoll.classList.add("accordion-collapse", "collapse") //<div id="fieldId-<%= obj.id %>" class="accordion-collapse collapse">
-
-        const divchild = document.createElement("div");
-        divchild.classList.add("accordion-body");
-
-        h2.appendChild(but);
-        div2.appendChild(h2);
-        divcoll.appendChild(divchild);
-        div2.appendChild(divcoll);
-        div.appendChild(div2);
-    }
-    target.parentElement.nextElementSibling.appendChild(div);
-
-}
-    
-EJS content
-<div class="accordion" id="accordionfilter">
-        <h2>search querries</h2>
-        <% for(const obj of fields){ %>
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button id="fieldId-<%= obj.id %>" class="accordion-button collapsed" type="button"
-                        data-bs-toggle="collapse" data-bs-target="#coll-fieldId-<%= obj.id %>" aria-expanded=""
-                        aria-controls="coll-fieldId-<%= obj.id %>">
-                        <%= obj.field_name %>
-                    </button>
-                </h2>
-                <div id="coll-fieldId-<%= obj.id %>" class="accordion-collapse collapse">
-                    <div class="accordion-body">
-                    </div>
-                </div>
-            </div>
-            <% } %>
-    </div>
-
-*/
