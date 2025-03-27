@@ -20,7 +20,7 @@ function getMainFields() {
 
 //get articles based on filters [fieldIds,categoryIds],
 //works by selecting all (and only those) articles that have all the selected filters
-// (where tech_id in ids "placeholders") => select all articles that have these fields
+// (where field_id in ids "placeholders") => select all articles that have these fields
 // 2. group by article_ids, then for each article_id count the number of fields => For each `article_id` group, the query calculates the number of distinct `field_id` values within that group. The `DISTINCT field_id` ensures that duplicate `field_id` entries in the same group are only counted once.
 // HAVING(COUNT...) = id.length: articles that have the numbers of field required, filters out the articles that are missing a filter
 function getArticles(fieldIds, categoryIds) {
@@ -30,14 +30,15 @@ function getArticles(fieldIds, categoryIds) {
             const substratePlaceholders = categoryIds.map(() => '?').join(', ');
             let basequery = `SELECT id, title, abstract, doi, publication_year
                              from Articles
-                             where id in (SELECT article_content.article_id
-                                          from article_content
+                             where id in (SELECT article_pretreatment.article_id
+                                          from article_pretreatment
                                           where field_id in (${fieldPlaceholders})
                                           group by article_id
                                           having count(distinct field_id) = ?)`;
             const queryParams = [...fieldIds, fieldIds.length];
-            let substratequery = `AND id IN(SELECT article_substrate.article_id 
-                    FROM article_substrate 
+            let substratequery = `AND id IN(
+                    SELECT article_content.article_id 
+                    FROM article_content 
                     WHERE category_id IN (${substratePlaceholders}) 
                     GROUP BY article_id 
                     HAVING COUNT(DISTINCT category_id) = ?
@@ -93,12 +94,23 @@ function getSubstrate_categories() {
     })
 }
 
-function getSubstrateNames(category_id) {
+function getArticleResults(article_ID) {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
-            db.all(`select id, name
-                    from substrate_name
-                    where substrate_name.parent_id = ?`, [category_id], (err, rows) => {
+            db.all(`SELECT substrate_category.name as category,
+                           "substrate type"        as type,
+                           "substrate name"        as name,
+                           TS,
+                           VS,
+                           TC,
+                           TN,
+                           "C/N",
+                           cellulose,
+                           "hemi-cellulose",
+                           lignin
+                    FROM article_content
+                             LEFT JOIN substrate_category ON substrate_category.id = article_content.category_id
+                    where article_id = ?`, [article_ID], (err, rows) => {
                 if (err) {
                     return reject(err);
                 }
@@ -108,41 +120,41 @@ function getSubstrateNames(category_id) {
     })
 }
 
-function getSubstrateTypes(substrate_id) {
-    return new Promise(function (resolve, reject) {
-        db.serialize(() => {
-            db.all(`select id, name
-                    from substrate_type
-                    where substrate_type.parent_id = ?`, [substrate_id], (err, rows) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(rows);
-            });
-        })
-    })
-}
+async function getArticlesInfo(fieldIds, categoryIds) {
+    const articles = await getArticles(fieldIds, categoryIds).catch(err => {
+        throw new Error(`Error at getting articles`, {cause: err})
+    });
+    //layout of articles: [{...},{...}]
+    let articlesInfo = [...articles];
+    for (const art of articles) {
 
-//get the substrate category, name and type for an article from article_substrate
-function getArticleSubstrates(article_id) {
-    return new Promise(function (resolve, reject) {
-        db.serialize(() => {
-            db.all(`SELECT substrate_category.name AS category,
-                           substrate_name.name     AS name,
-                           substrate_type.name     AS type
-                    FROM article_substrate
-                             LEFT JOIN substrate_category ON article_substrate.category_id = substrate_category.id
-                             LEFT JOIN substrate_name ON article_substrate.name_id = substrate_name.id
-                             LEFT JOIN substrate_type ON article_substrate.type_id = substrate_type.id
-                    WHERE article_substrate.article_id = ?`,
-                [article_id], (err, rows) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve(rows);
-                });
-        })
-    })
+        const results = await getArticleResults(art.id).catch(err => {
+            throw new Error(`Error at getting articles supplementary info`, {cause: err})
+        });
+        //layout of results: [{...},{...}]
+        console.log(results.length);
+
+        for (let item = 0; item < results.length; item++) {
+            const index = articlesInfo.findIndex(row => row.id === art.id);
+            if (item === 0) {
+                for (const prop in results) {
+                    articlesInfo[prop].prop = results[item].prop;
+                }
+                articlesInfo[index].substrates = results[item];
+                //delete articlesInfo[index].id;
+            } else {
+                let artCopy = {...art};
+                for (const prop in results) {
+                    artCopy[prop].prop = results[item].prop;
+                }
+                articlesInfo.splice(index + 1, 0, artCopy);//cannot modify articles inside its for loop
+            }
+        }
+    }
+    for (const art of articlesInfo) {
+        delete art.id;
+    }
+    return articlesInfo;
 }
 
 
@@ -153,6 +165,6 @@ module.exports = {
     getChild,
     getArticles,
     getSubstrate_categories,
-    getArticleSubstrates
+    getarticlesinfo: getArticlesInfo
 };
 
