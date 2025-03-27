@@ -9,7 +9,7 @@ const {
     getSubstrate_categories, getarticlesinfo
 } = require('../models/substrate_articles');
 
-router.get('/', async (req, res, next) => {
+router.get('/', async (req, res) => {
     const param = await getMainFields();
     const substrate = await getSubstrate_categories();
     console.log(param);

@@ -1,7 +1,5 @@
 const {dbSubstrate} = require('./database');
 const db = dbSubstrate;
-const fs = require('fs');
-const {Parser} = require('json2csv');
 
 
 //get the fields that do not have a parent considered as the starting point for filtering
@@ -60,7 +58,6 @@ function getArticles(fieldIds, categoryIds) {
 
 //from a 'parent' field retrieves all of its children (where parent =?)
 function getChild(id) {
-    const parentrow = parseInt(id);
     //console.log(id);
     if (!id) {
         throw new Error("id is not a number")
