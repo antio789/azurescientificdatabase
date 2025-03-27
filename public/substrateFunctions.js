@@ -206,13 +206,10 @@ function addNewArticlesAccordion(filters, target) {
 const yearSelection = document.querySelector("#yearSelect");
 yearSelection.addEventListener('click', function (e) {
     const selector = e.target;
+    let yearfield2;
     if (selector.nodeName === "OPTION") {
         yearfield2 = document.querySelector("#yearFilter");
-        if (selector.hasAttribute("value")) {
-            yearfield2.disabled = true;
-        } else {
-            yearfield2.disabled = false;
-        }
+        yearfield2.disabled = !!selector.hasAttribute("value");
     }
 })
 

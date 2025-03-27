@@ -34,7 +34,7 @@ function getArticles(fieldIds, categoryIds) {
                                           group by article_id
                                           having count(distinct field_id) = ?)`;
             const queryParams = [...fieldIds, fieldIds.length];
-            let substratequery = `AND id IN(
+            let substrateQuery = `AND id IN(
                     SELECT article_content.article_id 
                     FROM article_content 
                     WHERE category_id IN (${substratePlaceholders}) 
@@ -42,7 +42,7 @@ function getArticles(fieldIds, categoryIds) {
                     HAVING COUNT(DISTINCT category_id) = ?
                 )`;
             if (categoryIds && categoryIds.length > 0) {
-                basequery += substratequery;
+                basequery += substrateQuery;
                 queryParams.push(...categoryIds, categoryIds.length);
             }
             db.all(basequery, queryParams,
@@ -95,8 +95,10 @@ function getArticleResults(article_ID) {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
             db.all(`SELECT substrate_category.name as category,
-                           "substrate type"        as type,
-                           "substrate name"        as name,
+                           "substrate type"        as "substrate type",
+                           "substrate name"        as "substrate name",
+                           precat.name             as "pretreatment category",
+                           pretype.name            as "pretreatment type",
                            TS,
                            VS,
                            TC,
@@ -107,6 +109,8 @@ function getArticleResults(article_ID) {
                            lignin
                     FROM article_content
                              LEFT JOIN substrate_category ON substrate_category.id = article_content.category_id
+                             LEFT JOIN fields AS precat ON precat.id = article_content.precat_id
+                             LEFT JOIN fields AS pretype ON pretype.id = article_content.pretype_id
                     where article_id = ?`, [article_ID], (err, rows) => {
                 if (err) {
                     return reject(err);
@@ -122,37 +126,37 @@ async function getArticlesInfo(fieldIds, categoryIds) {
         throw new Error(`Error at getting articles`, {cause: err})
     });
     //layout of articles: [{...},{...}]
-    let articlesInfo = [...articles];
+    let articlesInfo = [];
     for (const art of articles) {
-
         const results = await getArticleResults(art.id).catch(err => {
             throw new Error(`Error at getting articles supplementary info`, {cause: err})
         });
-        //layout of results: [{...},{...}]
-        console.log(results.length);
-
-        for (let item = 0; item < results.length; item++) {
-            const index = articlesInfo.findIndex(row => row.id === art.id);
-            if (item === 0) {
-                for (const prop in results) {
-                    articlesInfo[prop].prop = results[item].prop;
-                }
-                articlesInfo[index].substrates = results[item];
-                //delete articlesInfo[index].id;
-            } else {
-                let artCopy = {...art};
-                for (const prop in results) {
-                    artCopy[prop].prop = results[item].prop;
-                }
-                articlesInfo.splice(index + 1, 0, artCopy);//cannot modify articles inside its for loop
-            }
-        }
-    }
-    for (const art of articlesInfo) {
         delete art.id;
+        //layout of results: [{...},{...}]
+        for (let item of results) {
+            articlesInfo.push({...art, ...item});
+        }
     }
     return articlesInfo;
 }
+
+/*
+async function getArticlePretreatment(article_id) {
+    return new Promise(function (resolve, reject) {
+        db.serialize(() => {
+            db.all(`SELECT fields.name
+                    from fields
+                             inner join article_pretreatment on article_pretreatment.field_id = fields.id
+                    where article_id = ?`), [article_id], (err, rows) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(rows);
+            }
+        })
+    })
+}
+ */
 
 
 //to do getsubstratecategory()

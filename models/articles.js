@@ -16,7 +16,6 @@ function getMainFields() {
 
 //from a 'parent' field retrieves all of its children (where parent =?)
 function getChild(id) {
-    const parentrow = parseInt(id);
     //console.log(id);
     if (!id) {
         throw new Error("id is not a number")
@@ -98,5 +97,4 @@ module.exports = {
     getChild,
     getArticles,
     getArticlesWithAuthors,
-    getAuthors
 };
