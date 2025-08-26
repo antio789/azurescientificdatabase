@@ -3,11 +3,20 @@
     it is stored as fieldId-x, thus 'fieldId-' is first removed before fetching data
 when a button is clicked to remove that filter a request for refresh is send to obtain the new list of articles
 */
-const anchorElement = document.querySelector(`#search-terms`);
+const PretreatmentSelection = document.querySelector(`#pretreatment_categories`);
+const ReactorSelection = document.querySelector(`#reactor_categories`);
 const substrateElement = document.querySelector(`#substrate_categories`);
 const exportbutton = document.querySelector(`#exportbutton`);
+
+document.querySelectorAll('.accordion-button a').forEach(function (button) {
+    button.addEventListener('click', function (e) {
+        e.addEventListener('click', function (e) {
+            e.stopPropagation();
+        })
+    })
+});
 exportbutton.addEventListener('click', async function (e) {
-    const filters = document.querySelectorAll('#search-terms .active');
+    const filters = document.querySelectorAll('#pretreatment_categories .active');
     const substrate = document.querySelectorAll('#substrate_categories .active');
     const fieldIds = [];
     const substrateIds = [];
@@ -36,11 +45,11 @@ exportbutton.addEventListener('click', async function (e) {
         })
 })
 
-anchorElement.addEventListener('click', function (e) {
+PretreatmentSelection.addEventListener('click', function (e) {
     const but = e.target;
     if (but.classList.contains("selection-button")) {
         but.classList.toggle("active");
-        const active = document.querySelectorAll('#search-terms .active');
+        const active = document.querySelectorAll('#pretreatment_categories .active');
         const substrate = document.querySelectorAll('#substrate_categories .active');
         const activeIds = [];
         const substrateIds = [];
@@ -57,7 +66,7 @@ anchorElement.addEventListener('click', function (e) {
             //query and insert new fields
 
             fetchArticles(parseInt(but.id.replace('fieldId-', '')), but, activeIds, substrateIds);//need to get id.
-        } else {
+        } else { //refresh when filter is removed
             const label = but.nextElementSibling;
             label.removeChild(label.lastChild);
             console.log(activeIds);
@@ -65,6 +74,41 @@ anchorElement.addEventListener('click', function (e) {
         }
     }
 })
+
+ReactorSelection.addEventListener('click', function (e) {
+    const active = document.querySelectorAll('#pretreatment_categories .active');
+    updatefiltering(e, active);
+})
+
+function updatefiltering(filter, active) {
+    const but = filter.target;
+    if (but.classList.contains("selection-button")) {
+        but.classList.toggle("active");
+        //const active = document.querySelectorAll('#pretreatment_categories .active');
+        const substrate = document.querySelectorAll('#substrate_categories .active');
+        const activeIds = [];
+        const substrateIds = [];
+        for (const activeButton of active) {
+            const id = activeButton.id.replace('fieldId-', '');
+            activeIds.push(parseInt(id));
+        }
+        for (const activeButton of substrate) {
+            const id = activeButton.id.replace('fieldId-', '');
+            substrateIds.push(parseInt(id));
+        }
+        //fetch the corresponding when the filter is a new one added
+        if (but.classList.contains("active")) {
+            //query and insert new fields
+
+            fetchArticles(parseInt(but.id.replace('fieldId-', '')), but, activeIds, substrateIds);//need to get id.
+        } else { //refresh when filter is removed
+            const label = but.nextElementSibling;
+            label.removeChild(label.lastChild);
+            console.log(activeIds);
+            refreshArticles(activeIds, substrateIds);
+        }
+    }
+}
 
 substrateElement.addEventListener('click', function (e) {
     const but = e.target;
@@ -93,14 +137,15 @@ substrateElement.addEventListener('click', function (e) {
     }
 })
 
-// fetch id: send the id that needs new children to be displayed, 0 if not necessary
-// target: the button in question, indicating where the children should be added
+
+// fetch id: send the id that needs new children to be displayed, 0 if ID not necessary
+// target: the button in question, indicating where the children(filtering options) should be added
 // activeIds: all the selected filters to fetch the articles.
 function fetchArticles(id, target, fieldsIds, substrateIds) {
     fetch('/substrate', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({fieldId: id, filters: fieldsIds, substrate: substrateIds})
+        body: JSON.stringify({fieldId: id, filters: fieldsIds, substrate: substrateIds, type: "substrate"})
     })
         .then(response => response.json())
         .then(data => {
@@ -119,6 +164,7 @@ function fetchArticles(id, target, fieldsIds, substrateIds) {
         .catch(err => console.error('Error fetching articles:', err));
 }
 
+//refresh: refresh articles after filter has been removed.
 function refreshArticles(fieldIds, substrateIds) {
     fetch('/substrate/refresh', {
         method: 'POST',
@@ -155,13 +201,12 @@ function addNewFilters(filters, target) {
 }
 
 function addNewArticlesAccordion(filters, target) {
-    while (target.firstChild) {
-        target.removeChild(target.lastChild);
-    }
-    const div2 = document.createElement("div");
-    div2.classList.add("accordion-item"); //<div class="accordion-item">
-    for (const obj of filters) {
+    target.replaceChildren();
 
+
+    for (const obj of filters) {
+        const articlesBox = document.createElement("div");
+        articlesBox.classList.add("accordion-item"); //<div class="accordion-item">
         const h2 = document.createElement("h2");
         h2.classList.add("accordion-header");   //<h2 class="accordion-header"></h2>
         const a = document.createElement("a");
@@ -169,6 +214,7 @@ function addNewArticlesAccordion(filters, target) {
         a.setAttribute("href", `https://doi.org/${obj.doi}`);
         a.setAttribute("role", "button");
         a.innerText = "go to article"; //<a class="btn btn-primary" href="#" role="button">Link</a>
+        setupAnchor(a);
         const but = document.createElement("button");
         but.classList.add("accordion-button", "collapsed");
         but.setAttribute('type', 'button');
@@ -179,7 +225,7 @@ function addNewArticlesAccordion(filters, target) {
         but.innerHTML = `${obj.title} <br/> Publication Year: ${obj.publication_year}`;
 
         //for identification in filtering context by date
-        div2.classList.add(`pubYear:${obj.publication_year}`)
+        articlesBox.classList.add(`pubYear:${obj.publication_year}`)
 
         const divcoll = document.createElement("div");
         divcoll.id = `articleId-${obj.id}`;
@@ -192,15 +238,24 @@ function addNewArticlesAccordion(filters, target) {
         h2.appendChild(but);
         a.classList.add("ms-2");
         but.appendChild(a);
-        div2.appendChild(h2);
+        articlesBox.appendChild(h2);
         divcoll.appendChild(divchild);
-        div2.appendChild(divcoll);
+        articlesBox.appendChild(divcoll);
         const p_substrate = document.createElement("p");
         p_substrate.classList.add("mt-2");
+        target.appendChild(articlesBox);
     }
-    target.appendChild(div2);
+    filterArticlesYear();
 }
 
+function setupAnchor(a) {
+    a.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        const href = a.getAttribute('href');
+        window.open(href, '_blank', 'noopener,noreferrer');
+    });
+}
 
 //disables the second year filter input when an option is selected that only requires one input.
 const yearSelection = document.querySelector("#yearSelect");
@@ -216,8 +271,13 @@ yearSelection.addEventListener('click', function (e) {
 //when the button is pressed filter the articles shown according to the year selected.
 const yearFilterButton = document.querySelector("#yearFilterButton");
 yearFilterButton.addEventListener('click', function (e) {
-    console.log("click");
+    filterArticlesYear();
+})
+
+function filterArticlesYear() {
     const value = yearSelection.value;
+    let year;
+    let filtertype;
     if (value === "From - To") {
         startyear = yearSelection.nextElementSibling;//first year to filter
         endyear = startyear.nextElementSibling;//last year to filter
@@ -243,7 +303,7 @@ yearFilterButton.addEventListener('click', function (e) {
             }
         }
     }
-})
+}
 
 function Articlelist() {
     const articles = document.querySelector('#accordionfilter');

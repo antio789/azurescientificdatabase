@@ -3,25 +3,28 @@ const router = express.Router();
 const ObjectsToCsv = require('objects-to-csv');
 
 const {
-    getMainFields,
+    getPretreatmentMainFields,
+    getReactorMainFields,
     getChild,
     getArticles,
     getSubstrate_categories, getarticlesinfo
 } = require('../models/substrate_articles');
 
+
 router.get('/', async (req, res) => {
-    const param = await getMainFields();
+    const param = await getPretreatmentMainFields();
+    const reactors = await getReactorMainFields();
     const substrate = await getSubstrate_categories();
     console.log(param);
-    res.render('substrate', {fields: param, substrate: substrate});
+    res.render('substrate', {fields: param, substrate: substrate, reactors: reactors});
 });
 
 router.post('/', async (req, res) => {
     try {
         const parent = req.body.fieldId;
         //console.log(req);
-        const Children = parent !== 0 ? await getChild(parent) : null;//
-        const articles = await getArticles(req.body.filters, req.body.substrate).catch(err => {
+        const Children = parent !== 0 ? await getChild(parent, 'pretreatment') : null;//
+        const articles = await getArticles(req.body.filters, req.body.substrate, "pretreatment").catch(err => {
             throw new Error(`Error at updating articles`, {cause: err})
         });
         //console.log(art2);
@@ -38,7 +41,7 @@ router.post('/', async (req, res) => {
 
 //called everytime a filter has been removed to update the articles list
 router.post('/refresh', async (req, res) => {
-    const Articles = await getArticles(req.body.filters, req.body.substrate).catch(err => {
+    const Articles = await getArticles(req.body.filters, req.body.substrate, "pretreatment").catch(err => {
         throw new Error(`Error at refreshing articles`, {cause: err})
     });
     //console.log(Articles);

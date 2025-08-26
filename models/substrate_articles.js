@@ -3,10 +3,23 @@ const db = dbSubstrate;
 
 
 //get the fields that do not have a parent considered as the starting point for filtering
-function getMainFields() {
+function getPretreatmentMainFields() {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
-            db.all("select id, name from fields where fields.id not in (select child from field_tree);", (err, rows) => {
+            db.all("select id, name from pretreatment_fields where pretreatment_fields.id not in (select child from pretreatment_field_tree);", (err, rows) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(rows);
+            });
+        })
+    })
+}
+
+function getReactorMainFields() {
+    return new Promise(function (resolve, reject) {
+        db.serialize(() => {
+            db.all("select id, name from reactors where reactors.id not in (select child from reactor_tree);", (err, rows) => {
                 if (err) {
                     return reject(err);
                 }
@@ -21,15 +34,16 @@ function getMainFields() {
 // (where field_id in ids "placeholders") => select all articles that have these fields
 // 2. group by article_ids, then for each article_id count the number of fields => For each `article_id` group, the query calculates the number of distinct `field_id` values within that group. The `DISTINCT field_id` ensures that duplicate `field_id` entries in the same group are only counted once.
 // HAVING(COUNT...) = id.length: articles that have the numbers of field required, filters out the articles that are missing a filter
-function getArticles(fieldIds, categoryIds) {
+function getArticles(fieldIds, categoryIds, type = "pretreatment") {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
             const fieldPlaceholders = fieldIds.map(() => '?').join(', ');
             const substratePlaceholders = categoryIds.map(() => '?').join(', ');
+            const table = type === "pretreatment" ? "article_pretreatment" : "article_reactor";
             let basequery = `SELECT id, title, abstract, doi, publication_year
                              from Articles
-                             where id in (SELECT article_pretreatment.article_id
-                                          from article_pretreatment
+                             where id in (SELECT ${table}.article_id
+                                          from ${table}
                                           where field_id in (${fieldPlaceholders})
                                           group by article_id
                                           having count(distinct field_id) = ?)`;
@@ -56,17 +70,20 @@ function getArticles(fieldIds, categoryIds) {
     })
 }
 
+
 //from a 'parent' field retrieves all of its children (where parent =?)
-function getChild(id) {
+function getChild(id, type = "pretreatment") {
     //console.log(id);
     if (!id) {
         throw new Error("id is not a number")
     }
+    const table_tree = type === "pretreatment" ? "pretreatment_field_tree" : "reactor_tree";
+    const table = type === "pretreatment" ? "pretreatment_fields" : "reactors";
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
             db.all(`select id, name
-                    from fields
-                    where id in (select child from field_tree where parent = ?);`, [id], (err, rows) => {
+                    from ${table}
+                    where id in (select child from ${table_tree} where parent = ?);`, [id], (err, rows) => {
                 if (err) {
                     return reject(err);
                 }
@@ -109,8 +126,8 @@ function getArticleResults(article_ID) {
                            lignin
                     FROM article_content
                              LEFT JOIN substrate_category ON substrate_category.id = article_content.category_id
-                             LEFT JOIN fields AS precat ON precat.id = article_content.precat_id
-                             LEFT JOIN fields AS pretype ON pretype.id = article_content.pretype_id
+                             LEFT JOIN pretreatment_fields AS precat ON precat.id = article_content.precat_id
+                             LEFT JOIN pretreatment_fields AS pretype ON pretype.id = article_content.pretype_id
                     where article_id = ?`, [article_ID], (err, rows) => {
                 if (err) {
                     return reject(err);
@@ -122,7 +139,7 @@ function getArticleResults(article_ID) {
 }
 
 async function getArticlesInfo(fieldIds, categoryIds) {
-    const articles = await getArticles(fieldIds, categoryIds).catch(err => {
+    const articles = await getArticles(fieldIds, categoryIds, "pretreatment").catch(err => {
         throw new Error(`Error at getting articles`, {cause: err})
     });
     //layout of articles: [{...},{...}]
@@ -162,7 +179,8 @@ async function getArticlePretreatment(article_id) {
 //to do getsubstratecategory()
 // get substrate
 module.exports = {
-    getMainFields,
+    getPretreatmentMainFields,
+    getReactorMainFields,
     getChild,
     getArticles,
     getSubstrate_categories,
