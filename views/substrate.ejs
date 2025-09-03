@@ -33,13 +33,13 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#collapseSelection" aria-expanded="true"
-                                aria-controls="collapseSelection">
+                                data-bs-target="#research_radio" aria-expanded="true"
+                                aria-controls="research_radio">
                             <strong>Select research area </strong>
                         </button>
 
                     </h2>
-                    <div id="collapseSelection" class="accordion-collapse collapse show"
+                    <div id="research_radio" class="accordion-collapse collapse show"
                          data-bs-parent="#research_selection">
                         <div class="accordion-body">
 
@@ -47,13 +47,13 @@
                             <ul class="list-group">
                                 <li class="list-group-item">
                                     <input class="form-check-input me-1" type="radio" name="ResearchGroupRadio" value=""
-                                           id="PretreatmentRadio" checked>
-                                    <label class="form-check-label" for="PretreatmentRadio">Pretreatment</label>
+                                           id="pretreatment_radio" checked>
+                                    <label class="form-check-label" for="pretreatment_radio">Pretreatment</label>
                                 </li>
                                 <li class="list-group-item">
                                     <input class="form-check-input me-1" type="radio" name="ResearchGroupRadio" value=""
-                                           id="ReactorRadio">
-                                    <label class="form-check-label" for="ReactorRadio">Reactors</label>
+                                           id="reactor_radio">
+                                    <label class="form-check-label" for="reactor_radio">Reactors</label>
                                 </li>
                             </ul>
 
@@ -108,7 +108,7 @@
                          data-bs-parent="#accordion_reactor">
                         <div class="accordion-body">
 
-                            <ul id="search-terms" class="list-group">
+                            <ul id="reactor_categories" class="list-group">
                                 <% for(const obj of reactors){ %>
                                     <li class="list-group-item">
                                         <button name="entry-<%= obj.id %>" id="fieldId-<%= obj.id %>"

@@ -3,18 +3,48 @@
     it is stored as fieldId-x, thus 'fieldId-' is first removed before fetching data
 when a button is clicked to remove that filter a request for refresh is send to obtain the new list of articles
 */
+
 const PretreatmentSelection = document.querySelector(`#pretreatment_categories`);
 const ReactorSelection = document.querySelector(`#reactor_categories`);
 const substrateElement = document.querySelector(`#substrate_categories`);
 const exportbutton = document.querySelector(`#exportbutton`);
+const researchContainer = document.querySelector(`#research_radio`);
+
+const filterType = Object.freeze({
+    PRETREATMENT: "pretreatment",
+    REACTOR: "reactor"
+});
+
+const fieldContainer = Object.freeze({
+    PRETREATMENT: "pretreatment_categories",
+    REACTOR: "reactor_categories"
+})
+
+const researchRadios = Object.freeze({
+    pretreatment: "pretreatment_radio",
+    reactor: "reactor_radio"
+})
 
 document.querySelectorAll('.accordion-button a').forEach(function (button) {
     button.addEventListener('click', function (e) {
-        e.addEventListener('click', function (e) {
-            e.stopPropagation();
-        })
+        e.stopPropagation();
     })
 });
+
+researchContainer.addEventListener('click', function (e) {
+    const react = document.querySelector("#accordion_reactor");
+    const pret = document.querySelector("#accordion_pretreatment");
+    if (document.getElementById(researchRadios.pretreatment).checked) {
+        //target.style = "display: none;"
+        //article.target.removeAttribute("style");
+        react.style = "display: none;"
+        pret.removeAttribute("style");
+    } else if (document.getElementById(researchRadios.reactor).checked) {
+        pret.style = "display: none;"
+        react.removeAttribute("style");
+    }
+});
+
 exportbutton.addEventListener('click', async function (e) {
     const filters = document.querySelectorAll('#pretreatment_categories .active');
     const substrate = document.querySelectorAll('#substrate_categories .active');
@@ -43,48 +73,23 @@ exportbutton.addEventListener('click', async function (e) {
             link.click();
             setTimeout(() => URL.revokeObjectURL(link.href), 0)
         })
-})
+});
 
 PretreatmentSelection.addEventListener('click', function (e) {
-    const but = e.target;
-    if (but.classList.contains("selection-button")) {
-        but.classList.toggle("active");
-        const active = document.querySelectorAll('#pretreatment_categories .active');
-        const substrate = document.querySelectorAll('#substrate_categories .active');
-        const activeIds = [];
-        const substrateIds = [];
-        for (const activeButton of active) {
-            const id = activeButton.id.replace('fieldId-', '');
-            activeIds.push(parseInt(id));
-        }
-        for (const activeButton of substrate) {
-            const id = activeButton.id.replace('fieldId-', '');
-            substrateIds.push(parseInt(id));
-        }
-        //fetch the corresponding when the filter is a new one added
-        if (but.classList.contains("active")) {
-            //query and insert new fields
 
-            fetchArticles(parseInt(but.id.replace('fieldId-', '')), but, activeIds, substrateIds);//need to get id.
-        } else { //refresh when filter is removed
-            const label = but.nextElementSibling;
-            label.removeChild(label.lastChild);
-            console.log(activeIds);
-            refreshArticles(activeIds, substrateIds);
-        }
-    }
-})
+    updateArticleFilters(e, fieldContainer.PRETREATMENT, filterType.PRETREATMENT);
+});
 
 ReactorSelection.addEventListener('click', function (e) {
-    const active = document.querySelectorAll('#pretreatment_categories .active');
-    updatefiltering(e, active);
-})
 
-function updatefiltering(filter, active) {
+    updateArticleFilters(e, fieldContainer.REACTOR, filterType.REACTOR);
+});
+
+function updateArticleFilters(filter, filterContainerId, type) {
     const but = filter.target;
     if (but.classList.contains("selection-button")) {
         but.classList.toggle("active");
-        //const active = document.querySelectorAll('#pretreatment_categories .active');
+        const active = document.querySelectorAll(`#${filterContainerId} .active`);
         const substrate = document.querySelectorAll('#substrate_categories .active');
         const activeIds = [];
         const substrateIds = [];
@@ -99,13 +104,12 @@ function updatefiltering(filter, active) {
         //fetch the corresponding when the filter is a new one added
         if (but.classList.contains("active")) {
             //query and insert new fields
-
-            fetchArticles(parseInt(but.id.replace('fieldId-', '')), but, activeIds, substrateIds);//need to get id.
+            fetchArticles(parseInt(but.id.replace('fieldId-', '')), but, activeIds, substrateIds, type);//need to get id.
         } else { //refresh when filter is removed
             const label = but.nextElementSibling;
             label.removeChild(label.lastChild);
             console.log(activeIds);
-            refreshArticles(activeIds, substrateIds);
+            refreshArticles(activeIds, substrateIds, type);
         }
     }
 }
@@ -114,11 +118,18 @@ substrateElement.addEventListener('click', function (e) {
     const but = e.target;
     if (but.classList.contains("selection-button")) {
         but.classList.toggle("active");
-        const active = document.querySelectorAll('#substrate_categories .active');
-        const fields = document.querySelectorAll('#search-terms .active');
+        const activeSubstrate = document.querySelectorAll('#substrate_categories .active');
+        const reactor = document.querySelectorAll('#reactor_categories .active');
+        const pretreat = document.querySelectorAll('#pretreatment_categories .active');
+        let fields = pretreat;
+        let type = filterType.PRETREATMENT;
+        if (document.getElementById(researchRadios.reactor).checked) {
+            fields = reactor;
+            type = filterType.REACTOR;
+        }
         const activeIds = [];
         const fieldsIds = [];
-        for (const activeButton of active) {
+        for (const activeButton of activeSubstrate) {
             const id = activeButton.id.replace('fieldId-', '');
             activeIds.push(parseInt(id));
         }
@@ -130,9 +141,9 @@ substrateElement.addEventListener('click', function (e) {
         if (but.classList.contains("active")) {
             //query and insert new fields
 
-            fetchArticles(0, but, fieldsIds, activeIds);//need to get id.
+            fetchArticles(0, but, fieldsIds, activeIds, type);//need to get id.
         } else {
-            refreshArticles(fieldsIds, activeIds);
+            refreshArticles(fieldsIds, activeIds, type);
         }
     }
 })
@@ -141,11 +152,11 @@ substrateElement.addEventListener('click', function (e) {
 // fetch id: send the id that needs new children to be displayed, 0 if ID not necessary
 // target: the button in question, indicating where the children(filtering options) should be added
 // activeIds: all the selected filters to fetch the articles.
-function fetchArticles(id, target, fieldsIds, substrateIds) {
+function fetchArticles(id, target, fieldsIds, substrateIds, type = filterType.PRETREATMENT) {
     fetch('/substrate', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({fieldId: id, filters: fieldsIds, substrate: substrateIds, type: "substrate"})
+        body: JSON.stringify({fieldId: id, filters: fieldsIds, substrate: substrateIds, filtertype: type})
     })
         .then(response => response.json())
         .then(data => {
@@ -165,11 +176,11 @@ function fetchArticles(id, target, fieldsIds, substrateIds) {
 }
 
 //refresh: refresh articles after filter has been removed.
-function refreshArticles(fieldIds, substrateIds) {
+function refreshArticles(fieldIds, substrateIds, type = filterType.PRETREATMENT) {
     fetch('/substrate/refresh', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({filters: fieldIds, substrate: substrateIds})
+        body: JSON.stringify({filters: fieldIds, substrate: substrateIds, filtertype: type})
     })
         .then(response => response.json())
         .then(data => {
@@ -277,10 +288,10 @@ yearFilterButton.addEventListener('click', function (e) {
 function filterArticlesYear() {
     const value = yearSelection.value;
     let year;
-    let filtertype;
+    let rangeFormat;
     if (value === "From - To") {
-        startyear = yearSelection.nextElementSibling;//first year to filter
-        endyear = startyear.nextElementSibling;//last year to filter
+        const startyear = yearSelection.nextElementSibling;//first year to filter
+        const endyear = startyear.nextElementSibling;//last year to filter
         for (const article of Articlelist()) {
             if (article.year < parseInt(startyear.value) || article.year > parseInt(endyear.value)) {
                 article.target.style = "display: none;"
@@ -290,13 +301,13 @@ function filterArticlesYear() {
         }
     } else {
         year = parseInt(yearSelection.nextElementSibling.value);//year to filter
-        filtertype = parseInt(yearSelection.value);//filter type
+        rangeFormat = parseInt(yearSelection.value);//filter type
         for (const article of Articlelist()) {
-            if (filtertype === 1 && article.year < year) {
+            if (rangeFormat === 1 && article.year < year) {
                 article.target.style = "display: none;"
-            } else if (filtertype === 2 && article.year > year) {
+            } else if (rangeFormat === 2 && article.year > year) {
                 article.target.style = "display: none;"
-            } else if (filtertype === 3 && article.year !== year) {
+            } else if (rangeFormat === 3 && article.year !== year) {
                 article.target.style = "display: none;"
             } else {
                 article.target.removeAttribute("style");
@@ -323,4 +334,5 @@ function Articlelist() {
     }
     return articlesarray;
 }
+
 

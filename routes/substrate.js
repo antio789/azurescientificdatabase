@@ -23,8 +23,8 @@ router.post('/', async (req, res) => {
     try {
         const parent = req.body.fieldId;
         //console.log(req);
-        const Children = parent !== 0 ? await getChild(parent, 'pretreatment') : null;//
-        const articles = await getArticles(req.body.filters, req.body.substrate, "pretreatment").catch(err => {
+        const Children = parent !== 0 ? await getChild(parent, req.body.filtertype) : null;//
+        const articles = await getArticles(req.body.filters, req.body.substrate, req.body.filtertype).catch(err => {
             throw new Error(`Error at updating articles`, {cause: err})
         });
         //console.log(art2);
@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
 
 //called everytime a filter has been removed to update the articles list
 router.post('/refresh', async (req, res) => {
-    const Articles = await getArticles(req.body.filters, req.body.substrate, "pretreatment").catch(err => {
+    const Articles = await getArticles(req.body.filters, req.body.substrate, req.body.filtertype).catch(err => {
         throw new Error(`Error at refreshing articles`, {cause: err})
     });
     //console.log(Articles);
