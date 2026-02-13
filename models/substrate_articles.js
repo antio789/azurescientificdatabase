@@ -20,6 +20,7 @@ function getPretreatmentMainFields() {
     })
 }
 
+//get the fields that do not have a parent considered as the starting point for filtering
 function getReactorMainFields() {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
@@ -98,7 +99,7 @@ function getChild(id, type = filterType.PRETREATMENT) {
     })
 }
 
-
+//returns all the substrate categories, this allows to fill in the filters on the page
 function getSubstrate_categories() {
     return new Promise(function (resolve, reject) {
         db.serialize(() => {
@@ -112,6 +113,7 @@ function getSubstrate_categories() {
         })
     })
 }
+
 
 function getArticleResults(article_ID) {
     return new Promise(function (resolve, reject) {
@@ -143,6 +145,7 @@ function getArticleResults(article_ID) {
     })
 }
 
+//used to export the articles' data
 async function getArticlesInfo(fieldIds, categoryIds) {
     const articles = await getArticles(fieldIds, categoryIds, filterType.PRETREATMENT).catch(err => {
         throw new Error(`Error at getting articles`, {cause: err})

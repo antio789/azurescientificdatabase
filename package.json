@@ -1,20 +1,20 @@
 {
-  "name": "myexpressapp",
-  "version": "0.0.0",
+  "name": "biogas_database",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
     "dev": "nodemon ./bin/www"
   },
   "dependencies": {
-    "body-parser": "^1.20.3",
+    "body-parser": "2.2.1",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "ejs": "^3.1.10",
     "express": "^4.21.1",
     "http-errors": "~1.6.3",
     "json2csv": "^6.0.0-alpha.2",
-    "morgan": "~1.9.1",
+    "morgan": "^1.10.1",
     "objects-to-csv": "^1.3.6",
     "sqlite3": "^5.1.7"
   },

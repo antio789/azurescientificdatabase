@@ -1,3 +1,7 @@
+/*
+TODO:update sqlite package to modern version sqlite 3 is unsupported
+ */
+
 const bodyParser = require('body-parser');
 
 const createError = require('http-errors');
