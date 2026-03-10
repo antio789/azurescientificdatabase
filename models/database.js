@@ -1,8 +1,9 @@
-const sqlite3 = require('sqlite3').verbose();
-const dbBRT = new sqlite3.Database('scientific_database.db');
-const dbSubstrate = new sqlite3.Database('substrateclassification.db');
+const BetterSqlite = require('better-sqlite3');
+const dbBRT = new BetterSqlite('scientific_database.db', {verbose: console.log, readonly: true});
+const dbSubstrate = new BetterSqlite('substrateclassification.db', {verbose: console.log, readonly: true});
+
 
 module.exports = {
     dbBRT,
-    dbSubstrate
+    dbSubstrate: dbSubstrate
 };

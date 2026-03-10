@@ -2,36 +2,15 @@ const {dbBRT} = require('./database');
 
 //get the fields that do not have a parent considered as the starting point for filtering
 function getMainFields() {
-    return new Promise(function (resolve, reject) {
-        dbBRT.serialize(() => {
-            dbBRT.all("select id, field_name from fields where fields.id not in (select child from fields_tree);", (err, rows) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(rows);
-            });
-        })
-    })
+    return dbBRT.prepare("select id, field_name from fields where fields.id not in (select child from fields_tree);").all();
 }
 
 //from a 'parent' field retrieves all of its children (where parent =?)
 function getChild(id) {
-    //console.log(id);
     if (!id) {
         throw new Error("id is not a number")
     }
-    return new Promise(function (resolve, reject) {
-        dbBRT.serialize(() => {
-            dbBRT.all(`select id, field_name
-                       from fields
-                       where id in (select child from fields_tree where parent = ?);`, [id], (err, rows) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(rows);
-            });
-        })
-    })
+    return dbBRT.prepare("select id, field_name from fields where fields.id not in (select child from fields_tree);").all([id])
 }
 
 //get articles based on filters [ids],
@@ -41,55 +20,37 @@ function getChild(id) {
 // HAVING(COUNT...) = id.length: articles that have the numbers of field required, filters out the articles that are missing a filter
 function getArticles(...ids) {
     const idArray = ids;
-    return new Promise(function (resolve, reject) {
-        dbBRT.serialize(() => {
-            const placeholders = idArray.map(() => '?').join(', ');
-            dbBRT.all(`SELECT id, title, abstract, doi, publication_year
-                       from Articles
-                       where id in (SELECT article_content.article_id
-                                    from article_content
-                                    where tech_id in (${placeholders})
-                                    group by article_id
-                                    having count(distinct tech_id) = ?);`, [...idArray, idArray.length],
-                (err, rows) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve(rows);
-                });
-        })
-    })
+    const placeholders = idArray.map(() => '?').join(', ');
+    const stmt = dbBRT.prepare(`SELECT id, title, abstract, doi, publication_year
+                                from Articles
+                                where id in (SELECT article_content.article_id
+                                             from article_content
+                                             where tech_id in (${placeholders})
+                                             group by article_id
+                                             having count(distinct tech_id) = ?);`);
+    return stmt.all([...idArray, idArray.length]);
 }
 
-//each cannot be used, because it doesnt wait for the database to finish before resolving
+
 //ids: the active filters
 // get articles from a selection of parameters, add the authors to each article
-async function getArticlesWithAuthors(...ids) {
-    const Articles = await getArticles(...ids);
+function getArticlesWithAuthors(...ids) {
+    const Articles = getArticles(...ids);
     for (const art of Articles) {
-        art.authors = await getAuthors(art.id);
+        art.authors = getAuthors(art.id);
     }
     return Articles;
 }
 
 //get authors from article id
 function getAuthors(id) {
-    return new Promise(function (resolve, reject) {
-        if (!id || Number.isNaN(id)) {
-            reject("not a valid number")
-        }
-        dbBRT.serialize(() => {
-            dbBRT.all(`Select first_name, last_name, orcid
-                       from authors
-                       where id in (select author_id from article_authors where article_id = ?);`, [id],
-                (err, rows) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve(rows);
-                });
-        })
-    })
+    if (!id || isNaN(id)) {
+        throw new Error("not a valid number");
+    }
+    const stmt = dbBRT.prepare(`Select first_name, last_name, orcid
+                                from authors
+                                where id in (select author_id from article_authors where article_id = ?);`);
+    return stmt.all([id]);
 }
 
 module.exports = {

@@ -13,22 +13,20 @@ const {
 const {join} = require("node:path");
 
 
-router.get('/', async (req, res) => {
-    const param = await getPretreatmentMainFields();
-    const reactors = await getReactorMainFields();
-    const substrate = await getSubstrate_categories();
+router.get('/', (req, res) => {
+    const param = getPretreatmentMainFields();
+    const reactors = getReactorMainFields();
+    const substrate = getSubstrate_categories();
     console.log(param);
     res.render('substrate', {fields: param, substrate: substrate, reactors: reactors});
 });
 
-router.post('/', async (req, res) => {
+router.post('/', (req, res) => {
     try {
         const parent = req.body.fieldId;
         //console.log(req);
-        const Children = parent !== 0 ? await getChild(parent, req.body.filtertype) : null;//
-        const articles = await getArticles(req.body.filters, req.body.substrate, req.body.filtertype).catch(err => {
-            throw new Error(`Error at updating articles`, {cause: err})
-        });
+        const Children = parent !== 0 ? getChild(parent, req.body.filtertype) : null;//
+        const articles = getArticles(req.body.filters, req.body.substrate, req.body.filtertype);
         //console.log(art2);
         //console.log(Articles);
         const resData = {
@@ -42,24 +40,20 @@ router.post('/', async (req, res) => {
 });
 
 //called everytime a filter has been removed to update the articles list
-router.post('/refresh', async (req, res) => {
-    const Articles = await getArticles(req.body.filters, req.body.substrate, req.body.filtertype).catch(err => {
-        throw new Error(`Error at refreshing articles`, {cause: err})
-    });
+router.post('/refresh', (req, res) => {
+    const Articles = getArticles(req.body.filters, req.body.substrate, req.body.filtertype);
     //console.log(Articles);
     res.json(JSON.stringify({articles: Articles}))
 })
 
 router.post('/export', async (req, res) => {
-    const Articles = await getarticlesinfo(req.body.filters, req.body.substrate).catch(err => {
-        throw new Error(`Error at exporting articles`, {cause: err})
-    });
+    const Articles = getarticlesinfo(req.body.filters, req.body.substrate);
     //console.log(Articles);
     const csv = await new ObjectsToCsv(Articles).toString();
     res.attachment('substrate.csv').send(csv);
 })
 
-router.get('/download', rateLimitDownload, (req, res) => {
+router.get('/download', (req, res) => {
     const filePath = join(__dirname, '../Downloads/Biogas_visualisation.pbix');
     const fileStream = fs.createReadStream(filePath);
 
@@ -74,12 +68,13 @@ router.get('/download', rateLimitDownload, (req, res) => {
     });
 });
 
-//basic setup to limit downloads, at some point update to a real solution
+//basic setup to limit downloads, need to find something functional
+/*
 function rateLimitDownload(req, res, next) {
     const clientIP = req.ip; // req.headers['x-forwarded-for'] -proxy check mdn for usage
     const cooldownMs = 1500;
     if (downloadTracking.has(clientIP)) {
-        return res.status(429).send('Too many requests. Please wait before downloading again.');
+        return null;
     }
     const cleanupTimer = setTimeout(() => {
         downloadTracking.delete(clientIP);
@@ -89,6 +84,6 @@ function rateLimitDownload(req, res, next) {
 }
 
 const downloadTracking = new Map();
-
+*/
 
 module.exports = router;
