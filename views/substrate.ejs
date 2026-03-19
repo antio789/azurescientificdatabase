@@ -43,50 +43,18 @@
                          data-bs-parent="#research_selection">
                         <div class="accordion-body">
 
-
                             <ul class="list-group">
-                                <li class="list-group-item">
-                                    <input class="form-check-input me-1" type="radio" name="ResearchGroupRadio" value=""
-                                           id="pretreatment_radio" checked>
-                                    <label class="form-check-label" for="pretreatment_radio">Pretreatment</label>
-                                </li>
-                                <li class="list-group-item">
-                                    <input class="form-check-input me-1" type="radio" name="ResearchGroupRadio" value=""
-                                           id="reactor_radio">
-                                    <label class="form-check-label" for="reactor_radio">Reactors</label>
-                                </li>
-                            </ul>
-
-
-                        </div>
-                    </div>
-                </div>
-            </search>
-
-
-            <search class="accordion pt-2" id="accordion_pretreatment">
-                <div class="accordion-item">
-                    <h3 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#collapsePretreatment" aria-expanded="false"
-                                aria-controls="collapsePretreatment">
-                            Pretreatment
-                        </button>
-                    </h3>
-                    <div id="collapsePretreatment" class="accordion-collapse collapse"
-                         data-bs-parent="#accordion_pretreatment">
-                        <div class="accordion-body">
-
-                            <ul id="pretreatment_categories" class="list-group">
-                                <% for(const obj of fields){ %>
+                                <% for (let i = 0; i < fields.length; i++) { %>
+                                    <% const field = fields[i]; %>
                                     <li class="list-group-item">
-                                        <button name="entry-<%= obj.id %>" id="fieldId-<%= obj.id %>"
-                                                class="selection-button "></button>
-                                        <label class="text-capitalize" for="fieldid-<%= obj.id %>">
-                                            <%= obj.name %>
-                                        </label>
+                                        <input class="form-check-input me-1" type="radio" name="ResearchGroupRadio"
+                                               value="" data-has-substrate="<%= field.hasSubstrate %>"
+                                               id="<%= field.name %>_radio" <% if (i === 0) { %>checked
+                                                <% } %>
+                                        >
+                                        <label class="form-check-label"
+                                               for="<%= field.name %>_radio"><%= field.display_name %></label>
                                     </li>
-
                                 <% } %>
                             </ul>
 
@@ -95,36 +63,40 @@
                 </div>
             </search>
 
-            <search class="accordion pt-2" id="accordion_reactor" style="display: none">
-                <div class="accordion-item">
-                    <h3 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#collapseReactor" aria-expanded="false"
-                                aria-controls="collapseReactor">
-                            Reactors
-                        </button>
-                    </h3>
-                    <div id="collapseReactor" class="accordion-collapse collapse"
-                         data-bs-parent="#accordion_reactor">
-                        <div class="accordion-body">
-
-                            <ul id="reactor_categories" class="list-group">
-                                <% for(const obj of reactors){ %>
-                                    <li class="list-group-item">
-                                        <button name="entry-<%= obj.id %>" id="fieldId-<%= obj.id %>"
-                                                class="selection-button "></button>
-                                        <label class="text-capitalize" for="fieldid-<%= obj.id %>">
-                                            <%= obj.name %>
-                                        </label>
-                                    </li>
-
-                                <% } %>
-                            </ul>
-
+            <% for (let i = 0; i < fields.length; i++) { %>
+                <% const field = fields[i]; %>
+                <search class="accordion pt-2" id="accordion_<%= field.name %>"
+                        <% if (i !== 0) { %>style="display: none"
+                        <% } %>
+                >
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapse<%= field.name %>" aria-expanded="false"
+                                    aria-controls="collapse<%= field.name %>">
+                                <%= field.display_name %>
+                            </button>
+                        </h3>
+                        <div id="collapse<%= field.name %>" class="accordion-collapse collapse"
+                             data-bs-parent="#accordion_<%= field.name %>">
+                            <div class="accordion-body">
+                                <ul id="<%= field.name %>_categories" class="list-group"
+                                    data-filter-type="<%= field.name %>" data-has-substrate="<%= field.hasSubstrate %>">
+                                    <% for (const filter of field.filters) { %>
+                                        <li class="list-group-item">
+                                            <button name="entry-<%= filter.id %>" id="fieldId-<%= filter.id %>"
+                                                    class="selection-button"></button>
+                                            <label class="text-capitalize" for="fieldId-<%= filter.id %>">
+                                                <%= filter.name %>
+                                            </label>
+                                        </li>
+                                    <% } %>
+                                </ul>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </search>
+                </search>
+            <% } %>
 
             <search class="accordion pt-3" id="accordion_Substrate">
                 <div class="accordion-item">

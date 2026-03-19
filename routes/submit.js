@@ -13,7 +13,6 @@ router.post('/submit', (req, res) => {
         //console.log(req);
         const Children = getChild(parent);//array
         //console.log(art2);
-        console.log(Children);
         res.json(JSON.stringify(Children));
     } catch (e) {
         console.log(e);
