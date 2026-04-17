@@ -1,0 +1,16 @@
+
+if not present install node and npm, requires latest node version
+follow on this link for node:
+https://nodejs.org/en/download
+
+10.
+inside the directory run
+npm install
+if necessary run
+npm audit fix
+
+start the application with npm startnode
+
+
+
+
