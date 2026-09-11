@@ -75,7 +75,7 @@ function getFilterMainFields() {
 }
 
 
-// Function to construct the query snippet for temperature
+// Function to construct the query snippet
 function getArticleQuery(fieldIds, table) {
     const fieldPlaceholders = fieldIds.map(() => '?').join(', ');
     let baseQuery = `
@@ -120,7 +120,7 @@ function getSubstrateQuery(SubstrateID, Params) {
                 )`;
     return {
         SQLquery: substrateQuery,
-        params: Params.push(...SubstrateIDs, SubstrateIDs.length)
+        params: [...Params, ...SubstrateID, SubstrateID.length]
     };
 }
 

@@ -116,13 +116,13 @@ function updateArticleFilters(filter, filterContainerId, type) {
 substrateElement.addEventListener('click', function (e) {
     const but = e.target;
     if (!but || !but.classList.contains("selection-button")) return;
-    if (but.dataset.hasSubstrate !== "true") return;
+    //xif (but.dataset.hasSubstrate !== "true") return;
     but.classList.toggle("active");
     const activeSubstrate = document.querySelectorAll('#substrate_categories .active');
     const activeFields = document.querySelectorAll('ul[data-filter-type] .active');
     if (!activeFields) return;
 
-    const fieldUl = activeFields.closest('ul[data-filter-type]');
+    const fieldUl = activeFields[0].closest('ul[data-filter-type]');
     const type = fieldUl.dataset.filterType;
 
     const activeIds = [...activeSubstrate].map(b =>
